@@ -1,212 +1,92 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arifa Admin Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root { --dark: #0f172a; --sidebar: #1e293b; --accent: #3b82f6; --bg: #f1f5f9; --primary: #2563eb;}
-        * { margin:0; padding:0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-        body { background: var(--bg); display: flex; min-height: 100vh; overflow-x: hidden; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daraz Admin | Secure Login</title>
+<style>
+*{box-sizing:border-box;font-family:Arial, sans-serif}
+body{margin:0;background:#f5f5f5}
+.hidden{display:none}
 
-        /* Login Overlay */
-        #login-overlay {
-            position: fixed; inset: 0; background: var(--dark);
-            display: flex; align-items: center; justify-content: center; z-index: 6000;
-        }
-        .login-box { background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 400px; text-align: center; }
+/* Login UI */
+.login{height:100vh;display:flex;justify-content:center;align-items:center}
+.login-box{background:#fff;padding:25px;width:320px;border-radius:10px;box-shadow:0 10px 25px rgba(0,0,0,0.1)}
+.login-box h2{text-align:center;color:#f85606;margin-bottom:20px}
+.login-box input{width:100%;padding:12px;margin-top:10px;border:1px solid #ddd;border-radius:5px}
+.login-box button{width:100%;padding:12px;margin-top:15px;background:#f85606;color:#fff;border:none;border-radius:5px;cursor:pointer;font-weight:bold}
 
-        /* Sidebar Styles */
-        aside { 
-            width: 260px; background: var(--sidebar); color: white; 
-            padding: 20px; position: fixed; height: 100%; transition: transform 0.4s ease;
-            z-index: 5000;
-        }
-        aside.hide { transform: translateX(-100%); }
+/* Admin Panel UI */
+header{background:#f85606;color:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center}
+header button{background:#fff;color:#f85606;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;font-weight:bold}
 
-        aside h2 { margin-bottom: 30px; font-size: 1.2rem; display: flex; justify-content: space-between; align-items: center; }
-        .side-link { 
-            display: flex; align-items: center; gap: 15px; color: #cbd5e1; 
-            text-decoration: none; padding: 12px; border-radius: 8px; margin-bottom: 5px;
-        }
-        .side-link:hover, .side-link.active { background: var(--accent); color: white; }
+.container{padding:20px;max-width:800px;margin:auto}
+form{background:#fff;padding:20px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.05)}
+form h3{margin-top:0;color:#333}
+form input, select{width:100%;padding:10px;margin:8px 0;border:1px solid #ddd;border-radius:5px}
+form img{max-width:100px;margin-top:10px;border-radius:5px;display:block}
 
-        /* Header / Navbar */
-        header {
-            background: white; padding: 15px 30px; width: 100%;
-            display: flex; align-items: center; gap: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            position: sticky; top: 0; z-index: 4000;
-        }
-        .toggle-btn { cursor: pointer; font-size: 1.5rem; color: var(--dark); }
+.save-btn{background:#28a745;color:#fff;border:none;padding:12px;width:100%;border-radius:5px;cursor:pointer;font-size:16px;margin-top:10px}
+.reset-btn{background:#6c757d;color:#fff;border:none;padding:8px;width:100%;border-radius:5px;cursor:pointer;margin-top:5px}
 
-        /* Main Content */
-        main { flex-grow: 1; margin-left: 260px; padding: 30px; transition: margin 0.4s ease; width: 100%; }
-        main.full { margin-left: 0; }
-
-        section { display: none; }
-        section.active { display: block; }
-
-        #menu-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 4500; }
-
-        @media (max-width: 768px) {
-            aside { transform: translateX(-100%); }
-            aside.show { transform: translateX(0); }
-            main { margin-left: 0 !important; }
-            #menu-overlay.active { display: block; }
-        }
-
-        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .card h4 { color: #64748b; font-size: 0.9rem; }
-        .card h2 { font-size: 1.8rem; margin-top: 5px; }
-        .table-container { background: white; border-radius: 12px; overflow-x: auto; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; min-width: 800px; }
-        th { text-align: left; padding: 12px; border-bottom: 2px solid #f1f5f9; color: #64748b; font-size: 0.85rem; }
-        td { padding: 12px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
-        img.thumb { width: 45px; height: 45px; border-radius: 6px; object-fit: cover; }
-        .modal { position: fixed; inset:0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 7000; }
-        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 450px; }
-        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #e2e8f0; border-radius: 8px; }
-        .btn { padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; background: var(--accent); color: white; font-weight: 600; }
-        
-        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; color: white; font-weight: 600; }
-    </style>
+.products-list{margin-top:30px}
+.card{background:#fff;padding:15px;border-radius:8px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 5px rgba(0,0,0,0.05)}
+.card-info b{display:block;font-size:16px}
+.card-btns button{padding:6px 10px;margin-left:5px;cursor:pointer;border-radius:4px;border:none}
+.edit-btn{background:#ffc107;color:#000}
+.del-btn{background:#dc3545;color:#fff}
+</style>
 </head>
 <body>
 
-    <div id="login-overlay" style="display: none;">
-        <div class="login-box">
-            <h2 style="margin-bottom: 20px;">Admin Login</h2>
-            <form id="admin-login-form">
-                <input type="email" id="admin-email" placeholder="Email" required>
-                <input type="password" id="admin-pass" placeholder="Password" required>
-                <button type="submit" class="btn" style="width: 100%;">Login to Admin</button>
-            </form>
-        </div>
-    </div>
+<div class="login" id="loginDiv">
+  <div class="login-box">
+    <h2>🔐 Admin Access</h2>
+    <input id="emailInput" type="email" placeholder="Email Address">
+    <input id="passInput" type="password" placeholder="Password">
+    <button id="loginBtn">Login</button>
+  </div>
+</div>
 
-    <aside id="sidebar-nav">
-        <h2>Arifa Admin <i class="fas fa-times toggle-btn" onclick="toggleSidebar()" style="color: white; font-size: 1rem; md:hidden"></i></h2>
-        <a href="#dashboard" class="side-link active"><i class="fas fa-chart-line"></i> <span>Dashboard</span></a>
-        <a href="#products" class="side-link"><i class="fas fa-box"></i> <span>Products</span></a>
-        <a href="#orders" class="side-link"><i class="fas fa-shopping-bag"></i> <span>Orders</span></a>
-        <a href="#slider" class="side-link"><i class="fas fa-images"></i> <span>Slider</span></a>
-        <a href="#messages" class="side-link"><i class="fas fa-envelope"></i> <span>Messages</span></a>
-        <a href="#" id="logout-btn" class="side-link"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a>
-    </aside>
+<div id="adminDiv" class="hidden">
+  <header>
+    <b>🧡 Daraz Deals Admin</b>
+    <span id="userEmail" style="font-size: 12px; margin-right: 10px;"></span>
+    <button id="logoutBtn">Logout</button>
+  </header>
 
-    <div id="menu-overlay" onclick="toggleSidebar()"></div>
+  <div class="container">
+    <form id="productForm">
+      <h3 id="formTitle">➕ Add New Product</h3>
+      <input id="title" placeholder="Product Title" required>
+      <input id="price" placeholder="Sale Price ৳" required>
+      <input id="old" placeholder="Regular Price ৳">
+      <input id="img" placeholder="Image URL" oninput="preview()">
+      <img id="preview" src="">
+      <input id="link" placeholder="Affiliate Link" required>
+      <select id="category">
+        <option>Electronics</option>
+        <option>Fashion</option>
+        <option>Home</option>
+        <option>Gadgets</option>
+      </select>
+      <input type="datetime-local" id="offerEnd">
+      <button type="submit" class="save-btn" id="saveBtn">💾 Save Product</button>
+      <button type="button" class="reset-btn" onclick="resetForm()">♻ Reset Form</button>
+    </form>
 
-    <div style="flex-grow: 1; display: flex; flex-direction: column;">
-        <header>
-            <i class="fas fa-bars toggle-btn" onclick="toggleSidebar()"></i>
-            <h3>Dashboard</h3>
-        </header>
+    <div class="products-list" id="productsDiv">লুড হচ্ছে...</div>
+  </div>
+</div>
 
-        <main id="main-content">
-            <section id="dashboard" class="active">
-                <h1>Overview</h1>
-                <div class="stats" id="stat-cards">
-                    <div class="card"><h4>Products</h4><h2 id="count-p">0</h2></div>
-                    <div class="card"><h4>Orders</h4><h2 id="count-o">0</h2></div>
-                    <div class="card"><h4>Messages</h4><h2 id="count-m">0</h2></div>
-                </div>
-            </section>
+<script type="module">
+  // Firebase SDKs
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-            <section id="products">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h1>Products</h1>
-                    <button class="btn" onclick="openProductModal()">+ Add Product</button>
-                </div>
-                <div class="table-container">
-                    <table id="products-table">
-                        <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Actions</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </section>
-            
-            <section id="orders">
-                <h1 style="margin-bottom: 15px;">All Customer Orders</h1>
-                <div class="table-container">
-                    <table id="orders-table">
-                        <thead>
-                            <tr>
-                                <th>Order ID</th>
-                                <th>Customer & Address</th>
-                                <th>Items</th>
-                                <th>Payment Info</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section id="slider">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h1>Slider Images</h1>
-                    <button class="btn" onclick="openSliderModal()">+ Add Slide</button>
-                </div>
-                <div class="table-container">
-                    <table id="slider-table">
-                        <thead><tr><th>Preview</th><th>URL</th><th>Actions</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section id="messages">
-                <h1>Customer Messages</h1>
-                <div class="table-container">
-                    <table id="messages-table">
-                        <thead><tr><th>Date</th><th>From</th><th>Message</th><th>Action</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </section>
-        </main>
-    </div>
-
-    <div class="modal" id="prod-modal">
-        <div class="modal-content">
-            <h3 id="modal-title">Add Product</h3>
-            <form id="prod-form">
-                <input type="hidden" id="p-id">
-                <input type="text" id="p-name" placeholder="Name" required>
-                <input type="text" id="p-cat" placeholder="Category" required>
-                <input type="number" id="p-price" placeholder="Price" required>
-                <input type="text" id="p-img" placeholder="Image URL" required>
-                <textarea id="p-desc" placeholder="Description"></textarea>
-                <button type="submit" class="btn" style="width: 100%;">Save Product</button>
-                <button type="button" class="btn" style="background:#64748b; margin-top: 10px; width: 100%;" onclick="closeModals()">Cancel</button>
-            </form>
-        </div>
-    </div>
-
-    <div class="modal" id="slide-modal">
-        <div class="modal-content">
-            <h3>Add Slider Image</h3>
-            <form id="slide-form">
-                <input type="text" id="s-url" placeholder="Image URL" required>
-                <button type="submit" class="btn" style="width: 100%;">Add Image</button>
-                <button type="button" class="btn" style="background:#64748b; margin-top: 10px; width: 100%;" onclick="closeModals()">Cancel</button>
-            </form>
-        </div>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
-        import { getDatabase, ref, set, get, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
-
-        const firebaseConfig = {
+  // --- আপনার Firebase Config এখানে বসান ---
+  const firebaseConfig = {
             apiKey: "AIzaSyDbc54ZsWBXFqX50KvY85kbHkUo_Ct5hLk",
             authDomain: "arifa-shop.firebaseapp.com",
             databaseURL: "https://arifa-shop-default-rtdb.firebaseio.com",
@@ -216,222 +96,137 @@
             appId: "1:792267788402:web:96dd32886699ff188472eb"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const colRef = collection(db, "products");
 
-        // --- Sidebar Logic ---
-        window.toggleSidebar = () => {
-            const sidebar = document.getElementById('sidebar-nav');
-            const main = document.getElementById('main-content');
-            const overlay = document.getElementById('menu-overlay');
-            if (window.innerWidth > 768) {
-                sidebar.classList.toggle('hide');
-                main.classList.toggle('full');
-            } else {
-                sidebar.classList.toggle('show');
-                overlay.classList.toggle('active');
-            }
-        };
+  let editId = null;
 
-        // --- Auth Logic ---
-        onAuthStateChanged(auth, user => {
-            if (user) {
-                document.getElementById('login-overlay').style.display = 'none';
-                initDashboard();
-            } else {
-                document.getElementById('login-overlay').style.display = 'flex';
-            }
-        });
+  // ১. লগইন লজিক
+  document.getElementById("loginBtn").onclick = async () => {
+    const email = document.getElementById("emailInput").value;
+    const pass = document.getElementById("passInput").value;
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+    } catch (err) {
+      alert("লগইন ব্যর্থ: " + err.message);
+    }
+  };
 
-        document.getElementById('admin-login-form').onsubmit = async (e) => {
-            e.preventDefault();
-            try {
-                await signInWithEmailAndPassword(auth, document.getElementById('admin-email').value, document.getElementById('admin-pass').value);
-            } catch (err) { alert("Login Error: " + err.message); }
-        };
+  // ২. অথেনটিকেশন স্টেট চেক (লগইন আছে কি নেই)
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      document.getElementById("loginDiv").classList.add("hidden");
+      document.getElementById("adminDiv").classList.remove("hidden");
+      document.getElementById("userEmail").innerText = user.email;
+      loadProducts();
+    } else {
+      document.getElementById("loginDiv").classList.remove("hidden");
+      document.getElementById("adminDiv").classList.add("hidden");
+    }
+  });
 
-        document.getElementById('logout-btn').onclick = () => signOut(auth);
+  // ৩. লগআউট
+  document.getElementById("logoutBtn").onclick = () => signOut(auth);
 
-        function initDashboard() {
-            updateStats();
-            renderProducts();
-            renderOrders();
-            renderSlider();
-            renderMessages();
-        }
+  // ৪. ইমেজ প্রিভিউ
+  window.preview = () => {
+    document.getElementById("preview").src = document.getElementById("img").value;
+  };
 
-        window.onhashchange = () => {
-            const hash = location.hash || '#dashboard';
-            document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-            document.getElementById(hash.substring(1))?.classList.add('active');
-            document.querySelectorAll('.side-link').forEach(l => l.classList.toggle('active', l.getAttribute('href') === hash));
-        };
+  // ৫. ডাটাবেজ থেকে প্রোডাক্ট লোড (Real-time)
+  function loadProducts() {
+    onSnapshot(colRef, (snapshot) => {
+      const productsDiv = document.getElementById("productsDiv");
+      productsDiv.innerHTML = snapshot.empty ? "কোনো প্রোডাক্ট পাওয়া যায়নি।" : "";
+      snapshot.docs.forEach(docSnap => {
+        const p = docSnap.data();
+        const id = docSnap.id;
+        productsDiv.innerHTML += `
+          <div class="card">
+            <div class="card-info">
+              <b>${p.title}</b>
+              <small>৳${p.price} | ${p.category}</small>
+            </div>
+            <div class="card-btns">
+              <button class="edit-btn" onclick="editProduct('${id}')">✏</button>
+              <button class="del-btn" onclick="deleteProduct('${id}')">❌</button>
+            </div>
+          </div>`;
+      });
+    });
+  }
 
-        const updateStats = () => {
-            onValue(ref(db, 'products'), s => document.getElementById('count-p').innerText = s.exists() ? Object.keys(s.val()).length : 0);
-            onValue(ref(db, 'orders'), s => {
-                let count = 0;
-                if(s.exists()) Object.values(s.val()).forEach(u => count += Object.keys(u).length);
-                document.getElementById('count-o').innerText = count;
-            });
-            onValue(ref(db, 'messages'), s => document.getElementById('count-m').innerText = s.exists() ? Object.keys(s.val()).length : 0);
-        };
+  // ৬. প্রোডাক্ট সেভ বা আপডেট
+  document.getElementById("productForm").onsubmit = async (e) => {
+    e.preventDefault();
+    const saveBtn = document.getElementById("saveBtn");
+    saveBtn.innerText = "Processing...";
+    saveBtn.disabled = true;
 
-        // --- Products Management ---
-        const renderProducts = () => {
-            onValue(ref(db, 'products'), snap => {
-                const tbody = document.querySelector('#products-table tbody');
-                tbody.innerHTML = '';
-                if(snap.exists()){
-                    Object.entries(snap.val()).forEach(([id, p]) => {
-                        tbody.innerHTML += `<tr>
-                            <td><img src="${p.imageUrl}" class="thumb"></td>
-                            <td>${p.name}</td>
-                            <td>${p.category}</td>
-                            <td>৳${p.price}</td>
-                            <td>
-                                <i class="fas fa-edit" onclick="editProduct('${id}')" style="cursor:pointer; color:var(--primary)"></i>
-                                <i class="fas fa-trash" onclick="deleteItem('products/${id}')" style="cursor:pointer; color:red; margin-left:15px"></i>
-                            </td>
-                        </tr>`;
-                    });
-                }
-            });
-        };
+    const data = {
+      title: document.getElementById("title").value,
+      price: document.getElementById("price").value,
+      old: document.getElementById("old").value,
+      img: document.getElementById("img").value,
+      link: document.getElementById("link").value,
+      category: document.getElementById("category").value,
+      offerEnd: document.getElementById("offerEnd").value
+    };
 
-        window.openProductModal = (id = null) => {
-            document.getElementById('prod-form').reset();
-            document.getElementById('p-id').value = id || '';
-            document.getElementById('modal-title').innerText = id ? 'Edit Product' : 'Add Product';
-            if(id) {
-                get(ref(db, `products/${id}`)).then(s => {
-                    const p = s.val();
-                    document.getElementById('p-name').value = p.name;
-                    document.getElementById('p-cat').value = p.category;
-                    document.getElementById('p-price').value = p.price;
-                    document.getElementById('p-img').value = p.imageUrl;
-                    document.getElementById('p-desc').value = p.description;
-                });
-            }
-            document.getElementById('prod-modal').style.display = 'flex';
-        };
+    try {
+      if (editId) {
+        await updateDoc(doc(db, "products", editId), data);
+        alert("আপডেট সফল হয়েছে!");
+      } else {
+        await addDoc(colRef, data);
+        alert("নতুন প্রোডাক্ট যোগ হয়েছে!");
+      }
+      resetForm();
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+    saveBtn.innerText = "💾 Save Product";
+    saveBtn.disabled = false;
+  };
 
-        document.getElementById('prod-form').onsubmit = (e) => {
-            e.preventDefault();
-            const id = document.getElementById('p-id').value;
-            const data = {
-                name: document.getElementById('p-name').value,
-                category: document.getElementById('p-cat').value,
-                price: parseFloat(document.getElementById('p-price').value),
-                imageUrl: document.getElementById('p-img').value,
-                description: document.getElementById('p-desc').value
-            };
-            if(id) update(ref(db, `products/${id}`), data);
-            else push(ref(db, 'products'), data);
-            closeModals();
-        };
+  // ৭. এডিট ফাংশন
+  window.editProduct = (id) => {
+    const docRef = doc(db, "products", id);
+    onSnapshot(docRef, (docSnap) => {
+      if(docSnap.exists()){
+        const p = docSnap.data();
+        editId = id;
+        document.getElementById("formTitle").innerText = "✏ Edit Product";
+        document.getElementById("title").value = p.title;
+        document.getElementById("price").value = p.price;
+        document.getElementById("old").value = p.old;
+        document.getElementById("img").value = p.img;
+        document.getElementById("link").value = p.link;
+        document.getElementById("category").value = p.category;
+        document.getElementById("offerEnd").value = p.offerEnd;
+        preview();
+        window.scrollTo(0,0);
+      }
+    });
+  };
 
-        // --- Improved Orders Management ---
-        const renderOrders = () => {
-            onValue(ref(db, 'orders'), snap => {
-                const tbody = document.querySelector('#orders-table tbody');
-                tbody.innerHTML = '';
-                if(snap.exists()){
-                    Object.entries(snap.val()).forEach(([uid, userOrders]) => {
-                        Object.entries(userOrders).forEach(([oid, o]) => {
-                            const items = o.items.map(i => `${i.name} (x${i.quantity})`).join(', ');
-                            const payColor = o.paymentMethod === 'COD' ? '#64748b' : '#d946ef';
-                            const statusColor = getStatusColor(o.status);
-                            
-                            tbody.innerHTML += `<tr>
-                                <td style="font-weight:600; font-size:0.8rem">${o.orderId}</td>
-                                <td>
-                                    <strong>${o.shippingName}</strong><br>
-                                    <small>${o.shippingAddress}</small><br>
-                                    <small style="color:var(--primary)">${o.userEmail}</small>
-                                </td>
-                                <td style="font-size:0.8rem">${items}</td>
-                                <td>
-                                    <strong>৳${o.totalAmount}</strong><br>
-                                    <span style="color:${payColor}; font-size:0.75rem; font-weight:700">
-                                        ${o.paymentMethod} ${o.transactionId && o.transactionId !== 'COD' ? '- '+o.transactionId : ''}
-                                    </span>
-                                </td>
-                                <td><span class="status-badge" style="background:${statusColor}">${o.status}</span></td>
-                                <td>
-                                    <select onchange="updateOrderStatus('${uid}', '${oid}', this.value)" style="margin:0; padding:5px; font-size:0.8rem">
-                                        <option value="Pending" ${o.status==='Pending'?'selected':''}>Pending</option>
-                                        <option value="Confirmed" ${o.status==='Confirmed'?'selected':''}>Confirmed</option>
-                                        <option value="Shipped" ${o.status==='Shipped'?'selected':''}>Shipped</option>
-                                        <option value="Delivered" ${o.status==='Delivered'?'selected':''}>Delivered</option>
-                                        <option value="Cancelled" ${o.status==='Cancelled'?'selected':''}>Cancelled</option>
-                                    </select>
-                                    <i class="fas fa-trash" onclick="deleteItem('orders/${uid}/${oid}')" style="color:red; cursor:pointer; margin-left:10px"></i>
-                                </td>
-                            </tr>`;
-                        });
-                    });
-                }
-            });
-        };
+  // ৮. ডিলিট ফাংশন
+  window.deleteProduct = async (id) => {
+    if(confirm("প্রোডাক্টটি ডিলিট করতে চান?")){
+      await deleteDoc(doc(db, "products", id));
+    }
+  };
 
-        function getStatusColor(status) {
-            if(status === 'Pending') return '#f59e0b';
-            if(status === 'Confirmed') return '#3b82f6';
-            if(status === 'Shipped') return '#8b5cf6';
-            if(status === 'Delivered') return '#10b981';
-            return '#ef4444';
-        }
-
-        window.updateOrderStatus = (uid, oid, val) => update(ref(db, `orders/${uid}/${oid}`), { status: val });
-
-        // --- Slider & Messages ---
-        const renderSlider = () => {
-            onValue(ref(db, 'sliderImages'), snap => {
-                const tbody = document.querySelector('#slider-table tbody');
-                tbody.innerHTML = '';
-                if(snap.exists()){
-                    Object.entries(snap.val()).forEach(([id, img]) => {
-                        tbody.innerHTML += `<tr>
-                            <td><img src="${img.downloadURL}" class="thumb" style="width:100px; height:50px"></td>
-                            <td><small>${img.downloadURL.substring(0,40)}...</small></td>
-                            <td><i class="fas fa-trash" onclick="deleteItem('sliderImages/${id}')" style="color:red; cursor:pointer"></i></td>
-                        </tr>`;
-                    });
-                }
-            });
-        };
-
-        window.openSliderModal = () => document.getElementById('slide-modal').style.display = 'flex';
-        document.getElementById('slide-form').onsubmit = (e) => {
-            e.preventDefault();
-            push(ref(db, 'sliderImages'), { downloadURL: document.getElementById('s-url').value });
-            closeModals();
-        };
-
-        const renderMessages = () => {
-            onValue(ref(db, 'messages'), snap => {
-                const tbody = document.querySelector('#messages-table tbody');
-                tbody.innerHTML = '';
-                if(snap.exists()){
-                    Object.entries(snap.val()).forEach(([id, m]) => {
-                        tbody.innerHTML += `<tr>
-                            <td>${new Date(m.date).toLocaleDateString()}</td>
-                            <td><strong>${m.name}</strong><br><small>${m.email}</small></td>
-                            <td>${m.message}</td>
-                            <td><i class="fas fa-trash" onclick="deleteItem('messages/${id}')" style="color:red; cursor:pointer"></i></td>
-                        </tr>`;
-                    });
-                }
-            });
-        };
-
-        window.deleteItem = (path) => { if(confirm('Delete this item?')) remove(ref(db, path)); };
-        window.closeModals = () => document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-        window.editProduct = (id) => openProductModal(id);
-        
-        window.onhashchange();
-    </script>
+  // ৯. রিসেট ফর্ম
+  window.resetForm = () => {
+    editId = null;
+    document.getElementById("formTitle").innerText = "➕ Add New Product";
+    document.getElementById("productForm").reset();
+    document.getElementById("preview").src = "";
+  };
+</script>
 </body>
 </html>
+

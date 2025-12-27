@@ -226,6 +226,27 @@ form img{max-width:100px;margin-top:10px;border-radius:5px;display:block}
     document.getElementById("productForm").reset();
     document.getElementById("preview").src = "";
   };
+
+  // ২. অথেনটিকেশন স্টেট চেক (লগইন আছে কি নেই তা চেক করা)
+  onAuthStateChanged(auth, (user) => {
+    const loginSection = document.getElementById("loginDiv");
+    const adminSection = document.getElementById("adminDiv");
+
+    if (user) {
+      // যদি ইউজার লগইন করা থাকে:
+      loginSection.style.display = "none"; // লগইন পেজ হাইড
+      adminSection.classList.remove("hidden"); // ড্যাশবোর্ড শো
+      adminSection.style.display = "block"; 
+      
+      document.getElementById("userEmail").innerText = user.email;
+      loadProducts(); // ডাটা লোড শুরু হবে
+    } else {
+      // যদি লগআউট অবস্থায় থাকে:
+      loginSection.style.display = "flex"; // লগইন পেজ শো
+      adminSection.style.display = "none"; // ড্যাশবোর্ড হাইড
+      adminSection.classList.add("hidden");
+    }
+  });
 </script>
 </body>
 </html>

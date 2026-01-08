@@ -1,253 +1,250 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Daraz Admin | Secure Login</title>
-<style>
-*{box-sizing:border-box;font-family:Arial, sans-serif}
-body{margin:0;background:#f5f5f5}
-.hidden{display:none}
-
-/* Login UI */
-.login{height:100vh;display:flex;justify-content:center;align-items:center}
-.login-box{background:#fff;padding:25px;width:320px;border-radius:10px;box-shadow:0 10px 25px rgba(0,0,0,0.1)}
-.login-box h2{text-align:center;color:#f85606;margin-bottom:20px}
-.login-box input{width:100%;padding:12px;margin-top:10px;border:1px solid #ddd;border-radius:5px}
-.login-box button{width:100%;padding:12px;margin-top:15px;background:#f85606;color:#fff;border:none;border-radius:5px;cursor:pointer;font-weight:bold}
-
-/* Admin Panel UI */
-header{background:#f85606;color:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center}
-header button{background:#fff;color:#f85606;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;font-weight:bold}
-
-.container{padding:20px;max-width:800px;margin:auto}
-form{background:#fff;padding:20px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.05)}
-form h3{margin-top:0;color:#333}
-form input, select{width:100%;padding:10px;margin:8px 0;border:1px solid #ddd;border-radius:5px}
-form img{max-width:100px;margin-top:10px;border-radius:5px;display:block}
-
-.save-btn{background:#28a745;color:#fff;border:none;padding:12px;width:100%;border-radius:5px;cursor:pointer;font-size:16px;margin-top:10px}
-.reset-btn{background:#6c757d;color:#fff;border:none;padding:8px;width:100%;border-radius:5px;cursor:pointer;margin-top:5px}
-
-.products-list{margin-top:30px}
-.card{background:#fff;padding:15px;border-radius:8px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 5px rgba(0,0,0,0.05)}
-.card-info b{display:block;font-size:16px}
-.card-btns button{padding:6px 10px;margin-left:5px;cursor:pointer;border-radius:4px;border:none}
-.edit-btn{background:#ffc107;color:#000}
-.del-btn{background:#dc3545;color:#fff}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - New journey Shop</title>
+    <link rel="stylesheet" href="admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+    <!-- Login Screen -->
+    <div class="admin-login" id="adminLogin">
+        <div class="login-container">
+            <h1><i class="fas fa-lock"></i> Admin Login</h1>
+            <form id="adminLoginForm">
+                <input type="text" id="adminUsername" placeholder="Username" required>
+                <input type="password" id="adminPassword" placeholder="Password" required>
+                <button type="submit" class="btn-primary">Login</button>
+            </form>
+        </div>
+    </div>
 
-<div class="login" id="loginDiv">
-  <div class="login-box">
-    <h2>🔐 Admin Access</h2>
-    <input id="emailInput" type="email" placeholder="Email Address">
-    <input id="passInput" type="password" placeholder="Password">
-    <button id="loginBtn">Login</button>
-  </div>
-</div>
-
-<div id="adminDiv" class="hidden">
-  <header>
-    <b>🧡 Daraz Deals Admin</b>
-    <span id="userEmail" style="font-size: 12px; margin-right: 10px;"></span>
-    <button id="logoutBtn">Logout</button>
-  </header>
-
-  <div class="container">
-    <form id="productForm">
-      <h3 id="formTitle">➕ Add New Product</h3>
-      <input id="title" placeholder="Product Title" required>
-      <input id="price" placeholder="Sale Price ৳" required>
-      <input id="old" placeholder="Regular Price ৳">
-      <input id="img" placeholder="Image URL" oninput="preview()">
-      <img id="preview" src="">
-      <input id="link" placeholder="Affiliate Link" required>
-      <select id="category">
-        <option>Electronics</option>
-        <option>Fashion</option>
-        <option>Home</option>
-        <option>Gadgets</option>
-      </select>
-      <input type="datetime-local" id="offerEnd">
-      <button type="submit" class="save-btn" id="saveBtn">💾 Save Product</button>
-      <button type="button" class="reset-btn" onclick="resetForm()">♻ Reset Form</button>
-    </form>
-
-    <div class="products-list" id="productsDiv">লুড হচ্ছে...</div>
-  </div>
-</div>
-
-<script type="module">
-  // Firebase SDKs
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-  // --- আপনার Firebase Config এখানে বসান ---
-  const firebaseConfig = {
-  apiKey: "AIzaSyDbc54ZsWBXFqX50KvY85kbHkUo_Ct5hLk",
-  authDomain: "arifa-shop.firebaseapp.com",
-  databaseURL: "https://arifa-shop-default-rtdb.firebaseio.com",
-  projectId: "arifa-shop",
-  storageBucket: "arifa-shop.firebasestorage.app",
-  messagingSenderId: "792267788402",
-  appId: "1:792267788402:web:96dd32886699ff188472eb"
-};
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-  const colRef = collection(db, "products");
-
-  let editId = null;
-
-  // ১. লগইন লজিক
-  document.getElementById("loginBtn").onclick = async () => {
-    const email = document.getElementById("emailInput").value;
-    const pass = document.getElementById("passInput").value;
-    try {
-      await signInWithEmailAndPassword(auth, email, pass);
-    } catch (err) {
-      alert("লগইন ব্যর্থ: " + err.message);
-    }
-  };
-
-  // ২. অথেনটিকেশন স্টেট চেক (লগইন আছে কি নেই)
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      document.getElementById("loginDiv").classList.add("hidden");
-      document.getElementById("adminDiv").classList.remove("hidden");
-      document.getElementById("userEmail").innerText = user.email;
-      loadProducts();
-    } else {
-      document.getElementById("loginDiv").classList.remove("hidden");
-      document.getElementById("adminDiv").classList.add("hidden");
-    }
-  });
-
-  // ৩. লগআউট
-  document.getElementById("logoutBtn").onclick = () => signOut(auth);
-
-  // ৪. ইমেজ প্রিভিউ
-  window.preview = () => {
-    document.getElementById("preview").src = document.getElementById("img").value;
-  };
-
-  // ৫. ডাটাবেজ থেকে প্রোডাক্ট লোড (Real-time)
-  function loadProducts() {
-    onSnapshot(colRef, (snapshot) => {
-      const productsDiv = document.getElementById("productsDiv");
-      productsDiv.innerHTML = snapshot.empty ? "কোনো প্রোডাক্ট পাওয়া যায়নি।" : "";
-      snapshot.docs.forEach(docSnap => {
-        const p = docSnap.data();
-        const id = docSnap.id;
-        productsDiv.innerHTML += `
-          <div class="card">
-            <div class="card-info">
-              <b>${p.title}</b>
-              <small>৳${p.price} | ${p.category}</small>
+    <!-- Admin Dashboard -->
+    <div class="admin-dashboard" id="adminDashboard" style="display: none;">
+        <!-- Header -->
+        <header class="admin-header">
+            <div class="admin-logo">
+                <h1><i class="fas fa-cog"></i> Admin Panel</h1>
             </div>
-            <div class="card-btns">
-              <button class="edit-btn" onclick="editProduct('${id}')">✏</button>
-              <button class="del-btn" onclick="deleteProduct('${id}')">❌</button>
+            <div class="admin-user">
+                <span>Welcome, Admin</span>
+                <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
             </div>
-          </div>`;
-      });
-    });
-  }
+        </header>
 
-  // ৬. প্রোডাক্ট সেভ বা আপডেট
-  document.getElementById("productForm").onsubmit = async (e) => {
-    e.preventDefault();
-    const saveBtn = document.getElementById("saveBtn");
-    saveBtn.innerText = "Processing...";
-    saveBtn.disabled = true;
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Sidebar -->
+            <aside class="admin-sidebar">
+                <nav>
+                    <ul>
+                        <li class="active" data-section="dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</li>
+                        <li data-section="products"><i class="fas fa-box"></i> Products</li>
+                        <li data-section="categories"><i class="fas fa-tags"></i> Categories</li>
+                        <li data-section="orders"><i class="fas fa-shopping-cart"></i> Orders</li>
+                        <li data-section="users"><i class="fas fa-users"></i> Users</li>
+                    </ul>
+                </nav>
+            </aside>
 
-    const data = {
-      title: document.getElementById("title").value,
-      price: document.getElementById("price").value,
-      old: document.getElementById("old").value,
-      img: document.getElementById("img").value,
-      link: document.getElementById("link").value,
-      category: document.getElementById("category").value,
-      offerEnd: document.getElementById("offerEnd").value
-    };
+            <!-- Content Area -->
+            <section class="admin-content">
+                <!-- Dashboard Section -->
+                <div class="content-section active" id="dashboardSection">
+                    <h2>Dashboard Overview</h2>
+                    <div class="dashboard-cards">
+                        <div class="card">
+                            <h3><i class="fas fa-box"></i> Total Products</h3>
+                            <p class="count" id="totalProducts">0</p>
+                        </div>
+                        <div class="card">
+                            <h3><i class="fas fa-shopping-cart"></i> Total Orders</h3>
+                            <p class="count" id="totalOrders">0</p>
+                        </div>
+                        <div class="card">
+                            <h3><i class="fas fa-users"></i> Total Users</h3>
+                            <p class="count" id="totalUsers">0</p>
+                        </div>
+                        <div class="card">
+                            <h3><i class="fas fa-money-bill"></i> Revenue</h3>
+                            <p class="count" id="totalRevenue">৳ 0</p>
+                        </div>
+                    </div>
 
-    try {
-      if (editId) {
-        await updateDoc(doc(db, "products", editId), data);
-        alert("আপডেট সফল হয়েছে!");
-      } else {
-        await addDoc(colRef, data);
-        alert("নতুন প্রোডাক্ট যোগ হয়েছে!");
-      }
-      resetForm();
-    } catch (err) {
-      alert("Error: " + err.message);
-    }
-    saveBtn.innerText = "💾 Save Product";
-    saveBtn.disabled = false;
-  };
+                    <!-- Recent Orders -->
+                    <div class="recent-orders">
+                        <h3>Recent Orders</h3>
+                        <div class="table-container">
+                            <table id="recentOrdersTable">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Customer</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Orders will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
 
-  // ৭. এডিট ফাংশন
-  window.editProduct = (id) => {
-    const docRef = doc(db, "products", id);
-    onSnapshot(docRef, (docSnap) => {
-      if(docSnap.exists()){
-        const p = docSnap.data();
-        editId = id;
-        document.getElementById("formTitle").innerText = "✏ Edit Product";
-        document.getElementById("title").value = p.title;
-        document.getElementById("price").value = p.price;
-        document.getElementById("old").value = p.old;
-        document.getElementById("img").value = p.img;
-        document.getElementById("link").value = p.link;
-        document.getElementById("category").value = p.category;
-        document.getElementById("offerEnd").value = p.offerEnd;
-        preview();
-        window.scrollTo(0,0);
-      }
-    });
-  };
+                <!-- Products Section -->
+                <div class="content-section" id="productsSection">
+                    <div class="section-header">
+                        <h2>Product Management</h2>
+                        <button class="btn-primary" id="addProductBtn"><i class="fas fa-plus"></i> Add Product</button>
+                    </div>
+                    
+                    <!-- Products Table -->
+                    <div class="table-container">
+                        <table id="productsTable">
+                            <thead>
+                                <tr>
+                                    <th>Image</th>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Stock</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productsTableBody">
+                                <!-- Products will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
-  // ৮. ডিলিট ফাংশন
-  window.deleteProduct = async (id) => {
-    if(confirm("প্রোডাক্টটি ডিলিট করতে চান?")){
-      await deleteDoc(doc(db, "products", id));
-    }
-  };
+                <!-- Categories Section -->
+                <div class="content-section" id="categoriesSection">
+                    <div class="section-header">
+                        <h2>Category Management</h2>
+                        <button class="btn-primary" id="addCategoryBtn"><i class="fas fa-plus"></i> Add Category</button>
+                    </div>
+                    
+                    <!-- Categories Table -->
+                    <div class="table-container">
+                        <table id="categoriesTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Products</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="categoriesTableBody">
+                                <!-- Categories will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
-  // ৯. রিসেট ফর্ম
-  window.resetForm = () => {
-    editId = null;
-    document.getElementById("formTitle").innerText = "➕ Add New Product";
-    document.getElementById("productForm").reset();
-    document.getElementById("preview").src = "";
-  };
+                <!-- Orders Section -->
+                <div class="content-section" id="ordersSection">
+                    <h2>Order Management</h2>
+                    
+                    <!-- Order Filters -->
+                    <div class="order-filters">
+                        <button class="filter-btn active" data-status="all">All Orders</button>
+                        <button class="filter-btn" data-status="pending">Pending</button>
+                        <button class="filter-btn" data-status="approved">Approved</button>
+                        <button class="filter-btn" data-status="cancelled">Cancelled</button>
+                    </div>
+                    
+                    <!-- Orders Table -->
+                    <div class="table-container">
+                        <table id="ordersTable">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Items</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTableBody">
+                                <!-- Orders will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
-  // ২. অথেনটিকেশন স্টেট চেক (লগইন আছে কি নেই তা চেক করা)
-  onAuthStateChanged(auth, (user) => {
-    const loginSection = document.getElementById("loginDiv");
-    const adminSection = document.getElementById("adminDiv");
+                <!-- Users Section -->
+                <div class="content-section" id="usersSection">
+                    <h2>User Management</h2>
+                    
+                    <!-- Users Table -->
+                    <div class="table-container">
+                        <table id="usersTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Orders</th>
+                                    <th>Joined</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <!-- Users will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
 
-    if (user) {
-      // যদি ইউজার লগইন করা থাকে:
-      loginSection.style.display = "none"; // লগইন পেজ হাইড
-      adminSection.classList.remove("hidden"); // ড্যাশবোর্ড শো
-      adminSection.style.display = "block"; 
-      
-      document.getElementById("userEmail").innerText = user.email;
-      loadProducts(); // ডাটা লোড শুরু হবে
-    } else {
-      // যদি লগআউট অবস্থায় থাকে:
-      loginSection.style.display = "flex"; // লগইন পেজ শো
-      adminSection.style.display = "none"; // ড্যাশবোর্ড হাইড
-      adminSection.classList.add("hidden");
-    }
-  });
-</script>
+    <!-- Add/Edit Product Modal -->
+    <div class="modal" id="productModal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modalTitle">Add Product</h2>
+            <form id="productForm">
+                <input type="hidden" id="productId">
+                <input type="text" id="productName" placeholder="Product Name" required>
+                <textarea id="productDescription" placeholder="Product Description" rows="3" required></textarea>
+                <select id="productCategory" required>
+                    <!-- Categories will be loaded here -->
+                </select>
+                <input type="number" id="productPrice" placeholder="Price (৳)" step="0.01" required>
+                <input type="number" id="productDiscount" placeholder="Discount (%)" step="1" min="0" max="100">
+                <input type="number" id="productStock" placeholder="Stock Quantity" required>
+                <input type="text" id="productImage" placeholder="Image URL" required>
+                <button type="submit" class="btn-primary">Save Product</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add/Edit Category Modal -->
+    <div class="modal" id="categoryModal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="categoryModalTitle">Add Category</h2>
+            <form id="categoryForm">
+                <input type="hidden" id="categoryId">
+                <input type="text" id="categoryName" placeholder="Category Name" required>
+                <input type="text" id="categoryIcon" placeholder="Icon Class (e.g., fas fa-mobile)" required>
+                <button type="submit" class="btn-primary">Save Category</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="admin.js"></script>
 </body>
 </html>
-

@@ -1124,3 +1124,67 @@ function showNotification(message, type = 'success') {
 function showError(message) {
     showNotification(message, 'error');
 }
+
+
+// app.js এর যেকোনো স্থানে এই ফাংশন যোগ করুন
+async function registerAsAdmin() {
+    const email = prompt("Enter admin email:");
+    const password = prompt("Enter admin password (min 6 characters):");
+    const name = prompt("Enter admin name:");
+    
+    if (!email || !password || !name) {
+        alert("All fields are required!");
+        return;
+    }
+    
+    if (password.length < 6) {
+        alert("Password must be at least 6 characters");
+        return;
+    }
+    
+    showLoading();
+    
+    try {
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        await userCredential.user.updateProfile({ displayName: name });
+        
+        // Save user to Firestore with admin role
+        await db.collection('users').doc(userCredential.user.uid).set({
+            name: name,
+            email: email,
+            role: 'admin', // সরাসরি admin role সেট করা হচ্ছে
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        alert('Admin account created successfully!');
+        showNotification('Admin account created!');
+        
+    } catch (error) {
+        console.error('Admin registration error:', error);
+        alert('Error creating admin account: ' + error.message);
+    } finally {
+        hideLoading();
+    }
+}
+
+// ইউজার ইন্টারফেসে একটি এডমিন রেজিস্ট্রেশন বাটন যোগ করতে চাইলে
+// নিচের কোড যোগ করুন (app.js এর initEventListeners ফাংশনে):
+function initEventListeners() {
+    // ... existing code ...
+    
+    // Admin registration button (for development only)
+    const adminRegisterBtn = document.createElement('button');
+    adminRegisterBtn.textContent = 'Admin Register (Dev)';
+    adminRegisterBtn.style.position = 'fixed';
+    adminRegisterBtn.style.bottom = '10px';
+    adminRegisterBtn.style.right = '10px';
+    adminRegisterBtn.style.zIndex = '9999';
+    adminRegisterBtn.style.padding = '10px';
+    adminRegisterBtn.style.backgroundColor = '#ff6b00';
+    adminRegisterBtn.style.color = 'white';
+    adminRegisterBtn.style.border = 'none';
+    adminRegisterBtn.style.borderRadius = '5px';
+    adminRegisterBtn.style.cursor = 'pointer';
+    adminRegisterBtn.addEventListener('click', registerAsAdmin);
+    document.body.appendChild(adminRegisterBtn);
+}

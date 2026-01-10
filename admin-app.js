@@ -1,999 +1,1192 @@
-// Admin Panel JavaScript
-const adminLoginScreen = document.getElementById('admin-login');
-const adminDashboard = document.getElementById('admin-dashboard');
-const adminLoginForm = document.getElementById('admin-login-form');
-const adminEmail = document.getElementById('admin-email');
-const adminPassword = document.getElementById('admin-password');
-const adminLogoutBtn = document.getElementById('admin-logout');
-const adminName = document.getElementById('admin-name');
+// Import Firebase services
+import { auth, db, storage } from './firebase.js';
 
-// Menu Items
-const menuItems = document.querySelectorAll('.menu-item');
-const adminSections = document.querySelectorAll('.admin-section');
+// DOM Elements
+const adminLogin = document.getElementById('adminLogin');
+const adminDashboard = document.getElementById('adminDashboard');
+const adminLoginForm = document.getElementById('adminLoginForm');
+const adminLogoutBtn = document.getElementById('adminLogoutBtn');
 
-// Stats Elements
-const totalRevenueEl = document.getElementById('total-revenue');
-const totalOrdersEl = document.getElementById('total-orders');
-const totalProductsEl = document.getElementById('total-products');
-const totalUsersEl = document.getElementById('total-users');
+// Admin Sections
+const adminSections = {
+    dashboard: document.getElementById('dashboardSection'),
+    products: document.getElementById('productsSection'),
+    categories: document.getElementById('categoriesSection'),
+    orders: document.getElementById('ordersSection'),
+    banners: document.getElementById('bannersSection'),
+    users: document.getElementById('usersSection')
+};
 
-// Table Elements
-const productsTable = document.getElementById('products-table');
-const ordersTable = document.getElementById('orders-table');
-const usersTable = document.getElementById('users-table');
-const recentOrdersTable = document.getElementById('recent-orders-table');
+// Admin Modals
+const adminProductModal = document.getElementById('adminProductModal');
+const adminCategoryModal = document.getElementById('adminCategoryModal');
+const adminBannerModal = document.getElementById('adminBannerModal');
 
-// Modal Elements
-const addProductModal = document.getElementById('add-product-modal');
-const addCategoryModal = document.getElementById('add-category-modal');
-const addBannerModal = document.getElementById('add-banner-modal');
-const closeModalBtns = document.querySelectorAll('.close-modal');
-const closeProductModalBtn = document.querySelector('.close-product-modal');
-const closeCategoryModalBtn = document.querySelector('.close-category-modal');
-const closeBannerModalBtn = document.querySelector('.close-banner-modal');
-
-// Form Elements
-const addProductBtn = document.getElementById('add-product-btn');
-const addCategoryBtn = document.getElementById('add-category-btn');
-const addBannerBtn = document.getElementById('add-banner-btn');
-const productForm = document.getElementById('product-form');
-const categoryForm = document.getElementById('category-form');
-const bannerForm = document.getElementById('banner-form');
-
-// Filter Elements
-const orderStatusFilter = document.getElementById('order-status-filter');
-const orderDateFilter = document.getElementById('order-date-filter');
-
-// Loading Overlay
-const adminLoading = document.getElementById('admin-loading');
+// Admin Toast
+const adminToast = document.getElementById('adminToast');
+const adminToastMessage = document.getElementById('adminToastMessage');
 
 // State Variables
 let currentAdmin = null;
-let adminProducts = [];
-let adminCategories = [];
-let adminOrders = [];
-let adminUsers = [];
-let adminBanners = [];
-let currentEditingProduct = null;
+let isEditingProduct = false;
+let isEditingCategory = false;
+let isEditingBanner = false;
+let currentEditId = null;
 
 // Initialize Admin App
 document.addEventListener('DOMContentLoaded', () => {
     initAdminApp();
 });
 
-// Initialize Admin App
-async function initAdminApp() {
+// Initialize Admin Application
+function initAdminApp() {
     // Check if user is already logged in
     auth.onAuthStateChanged(async (user) => {
         if (user) {
             // Check if user is admin
-            const userDoc = await db.collection('users').doc(user.uid).get();
-            if (userDoc.exists && userDoc.data().role === 'admin') {
+            const isAdmin = await checkIfAdmin(user.uid);
+            if (isAdmin) {
                 currentAdmin = user;
                 showAdminDashboard();
-                loadAdminData();
+                loadDashboardData();
+                initAdminEventListeners();
             } else {
+                // Not an admin, show login
                 showAdminLogin();
-                showError('Access denied. Admin privileges required.');
+                showToast('Access denied. Admin privileges required.', 'error');
                 await auth.signOut();
             }
         } else {
+            // Not logged in, show login
             showAdminLogin();
         }
     });
-    
-    initAdminEventListeners();
 }
 
-// Show/Hide Admin Screens
+// Check if User is Admin
+async function checkIfAdmin(uid) {
+    try {
+        const userDoc = await db.collection('users').doc(uid).get();
+        if (userDoc.exists) {
+            const userData = userDoc.data();
+            return userData.role === 'admin';
+        }
+        return false;
+    } catch (error) {
+        console.error('Error checking admin status:', error);
+        return false;
+    }
+}
+
+// Show/Hide Admin Sections
 function showAdminLogin() {
-    adminLoginScreen.style.display = 'flex';
+    adminLogin.style.display = 'flex';
     adminDashboard.style.display = 'none';
 }
 
 function showAdminDashboard() {
-    adminLoginScreen.style.display = 'none';
-    adminDashboard.style.display = 'block';
-    adminName.textContent = currentAdmin.displayName || 'Admin';
-}
-
-// Event Listeners
-function initAdminEventListeners() {
-    // Admin Login
-    adminLoginForm.addEventListener('submit', handleAdminLogin);
+    adminLogin.style.display = 'none';
+    adminDashboard.style.display = 'flex';
     
-    // Admin Logout
-    adminLogoutBtn.addEventListener('click', handleAdminLogout);
-    
-    // Menu Navigation
-    menuItems.forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            const section = item.getAttribute('data-section');
-            showSection(section);
-            
-            // Update active state
-            menuItems.forEach(i => i.classList.remove('active'));
-            item.classList.add('active');
-        });
-    });
-    
-    // Modal Open/Close
-    addProductBtn.addEventListener('click', () => openModal(addProductModal));
-    addCategoryBtn.addEventListener('click', () => openModal(addCategoryModal));
-    addBannerBtn.addEventListener('click', () => openModal(addBannerModal));
-    
-    closeModalBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            closeAllModals();
-            resetProductForm();
-        });
-    });
-    
-    if (closeProductModalBtn) {
-        closeProductModalBtn.addEventListener('click', () => {
-            closeModal(addProductModal);
-            resetProductForm();
-        });
-    }
-    
-    if (closeCategoryModalBtn) {
-        closeCategoryModalBtn.addEventListener('click', () => {
-            closeModal(addCategoryModal);
-            categoryForm.reset();
-        });
-    }
-    
-    if (closeBannerModalBtn) {
-        closeBannerModalBtn.addEventListener('click', () => {
-            closeModal(addBannerModal);
-            bannerForm.reset();
-        });
-    }
-    
-    // Click outside modal to close
-    window.addEventListener('click', (e) => {
-        if (e.target === addProductModal) {
-            closeModal(addProductModal);
-            resetProductForm();
-        }
-        if (e.target === addCategoryModal) {
-            closeModal(addCategoryModal);
-            categoryForm.reset();
-        }
-        if (e.target === addBannerModal) {
-            closeModal(addBannerModal);
-            bannerForm.reset();
-        }
-    });
-    
-    // Form Submissions
-    productForm.addEventListener('submit', handleProductSubmit);
-    categoryForm.addEventListener('submit', handleCategorySubmit);
-    bannerForm.addEventListener('submit', handleBannerSubmit);
-    
-    // Filters
-    if (orderStatusFilter) {
-        orderStatusFilter.addEventListener('change', filterOrders);
-    }
-    
-    if (orderDateFilter) {
-        orderDateFilter.addEventListener('change', filterOrders);
-    }
-    
-    // Image Upload Preview
-    const productImageInput = document.getElementById('product-image');
-    if (productImageInput) {
-        productImageInput.addEventListener('change', function(e) {
-            previewImage(e.target, 'image-preview');
-        });
-    }
-    
-    const bannerImageInput = document.getElementById('banner-image');
-    if (bannerImageInput) {
-        bannerImageInput.addEventListener('change', function(e) {
-            previewImage(e.target, 'banner-preview');
-        });
+    // Update admin name
+    const adminUserName = document.getElementById('adminUserName');
+    if (adminUserName && currentAdmin) {
+        adminUserName.textContent = currentAdmin.displayName || currentAdmin.email;
     }
 }
 
-// Authentication Functions
-async function handleAdminLogin(e) {
-    e.preventDefault();
-    
-    const email = adminEmail.value.trim();
-    const password = adminPassword.value;
-    
-    if (!email || !password) {
-        showError('Please enter email and password');
-        return;
-    }
-    
-    showAdminLoading();
-    
-    try {
-        const userCredential = await auth.signInWithEmailAndPassword(email, password);
-        const user = userCredential.user;
-        
-        // Check if user is admin
-        const userDoc = await db.collection('users').doc(user.uid).get();
-        
-        if (!userDoc.exists || userDoc.data().role !== 'admin') {
-            await auth.signOut();
-            throw new Error('Access denied. Admin privileges required.');
-        }
-        
-        currentAdmin = user;
-        showAdminDashboard();
-        loadAdminData();
-        showNotification('Admin login successful!');
-        
-    } catch (error) {
-        console.error('Admin login error:', error);
-        showError(error.message || 'Invalid credentials or access denied');
-    } finally {
-        hideAdminLoading();
-    }
-}
-
-async function handleAdminLogout() {
-    try {
-        await auth.signOut();
-        currentAdmin = null;
-        showAdminLogin();
-        showNotification('Logged out successfully');
-    } catch (error) {
-        console.error('Logout error:', error);
-        showError('Logout failed');
-    }
-}
-
-// Section Navigation
-function showSection(sectionId) {
-    adminSections.forEach(section => {
+// Switch Admin Section
+function switchAdminSection(sectionId) {
+    // Hide all sections
+    Object.values(adminSections).forEach(section => {
         section.classList.remove('active');
     });
     
-    const targetSection = document.getElementById(`${sectionId}-section`);
-    if (targetSection) {
-        targetSection.classList.add('active');
+    // Remove active class from all nav buttons
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Show selected section
+    if (adminSections[sectionId]) {
+        adminSections[sectionId].classList.add('active');
         
-        // Load section-specific data
-        switch(sectionId) {
+        // Add active class to corresponding nav button
+        const navBtn = document.querySelector(`.nav-btn[data-section="${sectionId}"]`);
+        if (navBtn) {
+            navBtn.classList.add('active');
+        }
+        
+        // Load section data
+        switch (sectionId) {
             case 'dashboard':
-                loadDashboardStats();
-                loadRecentOrders();
+                loadDashboardData();
                 break;
             case 'products':
-                loadProductsTable();
+                loadProducts();
                 break;
             case 'categories':
-                loadCategoriesManagement();
+                loadCategories();
                 break;
             case 'orders':
-                loadOrdersTable();
+                loadOrders();
                 break;
             case 'banners':
-                loadBannersManagement();
+                loadBanners();
                 break;
             case 'users':
-                loadUsersTable();
+                loadUsers();
                 break;
         }
     }
 }
 
-// Data Loading Functions
-async function loadAdminData() {
-    showAdminLoading();
+// Initialize Admin Event Listeners
+function initAdminEventListeners() {
+    // Navigation buttons
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const sectionId = btn.dataset.section;
+            switchAdminSection(sectionId);
+        });
+    });
     
-    try {
-        await Promise.all([
-            loadDashboardStats(),
-            loadProductsTable(),
-            loadCategoriesManagement(),
-            loadOrdersTable(),
-            loadUsersTable(),
-            loadBannersManagement()
-        ]);
-    } catch (error) {
-        console.error('Error loading admin data:', error);
-        showError('Failed to load admin data');
-    } finally {
-        hideAdminLoading();
+    // Logout button
+    if (adminLogoutBtn) {
+        adminLogoutBtn.addEventListener('click', handleAdminLogout);
+    }
+    
+    // Login form
+    if (adminLoginForm) {
+        adminLoginForm.addEventListener('submit', handleAdminLogin);
+    }
+    
+    // Add buttons
+    const addProductBtn = document.getElementById('addProductBtn');
+    const addCategoryBtn = document.getElementById('addCategoryBtn');
+    const addBannerBtn = document.getElementById('addBannerBtn');
+    
+    if (addProductBtn) {
+        addProductBtn.addEventListener('click', () => {
+            showProductModal();
+        });
+    }
+    
+    if (addCategoryBtn) {
+        addCategoryBtn.addEventListener('click', () => {
+            showCategoryModal();
+        });
+    }
+    
+    if (addBannerBtn) {
+        addBannerBtn.addEventListener('click', () => {
+            showBannerModal();
+        });
+    }
+    
+    // Order filter
+    const orderFilter = document.getElementById('orderFilter');
+    if (orderFilter) {
+        orderFilter.addEventListener('change', () => {
+            loadOrders(orderFilter.value);
+        });
+    }
+    
+    // Modal close buttons
+    document.querySelectorAll('.close-modal').forEach(btn => {
+        btn.addEventListener('click', () => {
+            hideModal(adminProductModal);
+            hideModal(adminCategoryModal);
+            hideModal(adminBannerModal);
+        });
+    });
+    
+    // Cancel buttons
+    const cancelProductBtn = document.getElementById('cancelProductBtn');
+    const cancelCategoryBtn = document.getElementById('cancelCategoryBtn');
+    const cancelBannerBtn = document.getElementById('cancelBannerBtn');
+    
+    if (cancelProductBtn) {
+        cancelProductBtn.addEventListener('click', () => {
+            hideModal(adminProductModal);
+        });
+    }
+    
+    if (cancelCategoryBtn) {
+        cancelCategoryBtn.addEventListener('click', () => {
+            hideModal(adminCategoryModal);
+        });
+    }
+    
+    if (cancelBannerBtn) {
+        cancelBannerBtn.addEventListener('click', () => {
+            hideModal(adminBannerModal);
+        });
+    }
+    
+    // Form submissions
+    const productForm = document.getElementById('productForm');
+    const categoryForm = document.getElementById('categoryForm');
+    const bannerForm = document.getElementById('bannerForm');
+    
+    if (productForm) {
+        productForm.addEventListener('submit', handleProductSubmit);
+    }
+    
+    if (categoryForm) {
+        categoryForm.addEventListener('submit', handleCategorySubmit);
+    }
+    
+    if (bannerForm) {
+        bannerForm.addEventListener('submit', handleBannerSubmit);
+    }
+    
+    // Image previews
+    const productImageInput = document.getElementById('productImage');
+    if (productImageInput) {
+        productImageInput.addEventListener('change', (e) => {
+            previewImage(e.target, 'imagePreview');
+        });
+    }
+    
+    const bannerImageInput = document.getElementById('bannerImage');
+    if (bannerImageInput) {
+        bannerImageInput.addEventListener('change', (e) => {
+            previewImage(e.target, 'bannerPreview');
+        });
     }
 }
 
-async function loadDashboardStats() {
+// Admin Login Handler
+async function handleAdminLogin(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('adminEmail').value;
+    const password = document.getElementById('adminPassword').value;
+    const loginMessage = document.getElementById('adminLoginMessage');
+    
     try {
-        // Load total revenue (sum of all delivered orders)
-        const ordersSnapshot = await db.collection('orders')
-            .where('status', '==', 'delivered')
-            .get();
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        const isAdmin = await checkIfAdmin(userCredential.user.uid);
         
+        if (isAdmin) {
+            currentAdmin = userCredential.user;
+            showAdminDashboard();
+            loadDashboardData();
+            initAdminEventListeners();
+            showToast('Admin login successful!', 'success');
+        } else {
+            await auth.signOut();
+            if (loginMessage) {
+                loginMessage.textContent = 'Access denied. Admin privileges required.';
+                loginMessage.className = 'login-message error';
+            }
+        }
+    } catch (error) {
+        console.error('Admin login error:', error);
+        
+        if (loginMessage) {
+            loginMessage.textContent = getAuthErrorMessage(error);
+            loginMessage.className = 'login-message error';
+        }
+    }
+}
+
+// Admin Logout Handler
+async function handleAdminLogout() {
+    try {
+        await auth.signOut();
+        showAdminLogin();
+        showToast('Logged out successfully', 'success');
+    } catch (error) {
+        console.error('Admin logout error:', error);
+        showToast('Error logging out', 'error');
+    }
+}
+
+// Load Dashboard Data
+async function loadDashboardData() {
+    try {
+        // Load products count
+        const productsSnapshot = await db.collection('products').get();
+        const totalProducts = productsSnapshot.size;
+        document.getElementById('totalProducts').textContent = totalProducts;
+        
+        // Load orders count
+        const ordersSnapshot = await db.collection('orders').get();
+        const totalOrders = ordersSnapshot.size;
+        document.getElementById('totalOrders').textContent = totalOrders;
+        
+        // Load users count
+        const usersSnapshot = await db.collection('users').get();
+        const totalUsers = usersSnapshot.size;
+        document.getElementById('totalUsers').textContent = totalUsers;
+        
+        // Calculate total revenue
         let totalRevenue = 0;
-        ordersSnapshot.docs.forEach(doc => {
+        ordersSnapshot.forEach(doc => {
             const order = doc.data();
             totalRevenue += order.total || 0;
         });
-        
-        totalRevenueEl.textContent = `৳ ${totalRevenue.toFixed(2)}`;
-        totalOrdersEl.textContent = ordersSnapshot.size;
-        
-        // Load total products
-        const productsSnapshot = await db.collection('products').get();
-        totalProductsEl.textContent = productsSnapshot.size;
-        
-        // Load total users
-        const usersSnapshot = await db.collection('users').get();
-        totalUsersEl.textContent = usersSnapshot.size;
+        document.getElementById('totalRevenue').textContent = `৳${totalRevenue.toFixed(2)}`;
         
     } catch (error) {
-        console.error('Error loading dashboard stats:', error);
+        console.error('Error loading dashboard data:', error);
+        showToast('Error loading dashboard data', 'error');
     }
 }
 
-async function loadRecentOrders() {
+// Load Products
+async function loadProducts() {
+    const productsTableBody = document.getElementById('productsTableBody');
+    if (!productsTableBody) return;
+    
     try {
-        const snapshot = await db.collection('orders')
-            .orderBy('createdAt', 'desc')
-            .limit(10)
-            .get();
+        const snapshot = await db.collection('products').orderBy('createdAt', 'desc').get();
+        productsTableBody.innerHTML = '';
         
-        const tbody = recentOrdersTable.querySelector('tbody');
-        tbody.innerHTML = '';
+        if (snapshot.empty) {
+            productsTableBody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="loading-row">No products found</td>
+                </tr>
+            `;
+            return;
+        }
         
-        snapshot.docs.forEach(doc => {
-            const order = { id: doc.id, ...doc.data() };
-            const row = createOrderRow(order);
-            tbody.appendChild(row);
-        });
-    } catch (error) {
-        console.error('Error loading recent orders:', error);
-    }
-}
-
-async function loadProductsTable() {
-    try {
-        const snapshot = await db.collection('products').get();
-        adminProducts = [];
-        snapshot.docs.forEach(doc => {
-            adminProducts.push({ id: doc.id, ...doc.data() });
-        });
-        
-        const tbody = productsTable.querySelector('tbody');
-        tbody.innerHTML = '';
-        
-        adminProducts.forEach(product => {
+        snapshot.forEach(doc => {
+            const product = { id: doc.id, ...doc.data() };
             const row = createProductRow(product);
-            tbody.appendChild(row);
+            productsTableBody.appendChild(row);
         });
     } catch (error) {
         console.error('Error loading products:', error);
-        showError('Failed to load products');
+        productsTableBody.innerHTML = `
+            <tr>
+                <td colspan="7" class="loading-row">Error loading products</td>
+            </tr>
+        `;
+        showToast('Error loading products', 'error');
     }
 }
 
-async function loadCategoriesManagement() {
-    try {
-        const snapshot = await db.collection('categories').get();
-        adminCategories = [];
-        snapshot.docs.forEach(doc => {
-            adminCategories.push({ id: doc.id, ...doc.data() });
-        });
-        
-        const categoriesList = document.querySelector('.categories-list');
-        if (!categoriesList) return;
-        
-        categoriesList.innerHTML = '';
-        
-        // Populate category select in product form
-        const categorySelect = document.getElementById('product-category');
-        if (categorySelect) {
-            categorySelect.innerHTML = '<option value="">Select Category</option>';
-            adminCategories.forEach(category => {
-                const option = document.createElement('option');
-                option.value = category.id;
-                option.textContent = category.name;
-                categorySelect.appendChild(option);
-            });
-        }
-        
-        adminCategories.forEach(category => {
-            const categoryItem = document.createElement('div');
-            categoryItem.className = 'category-item-admin';
-            categoryItem.innerHTML = `
-                <div class="category-icon-admin">
-                    <i class="${category.iconUrl || 'fas fa-box'}"></i>
-                </div>
-                <div>
-                    <h4>${category.name}</h4>
-                    <p>${category.productsCount || 0} products</p>
-                </div>
-                <div class="category-actions">
-                    <button class="action-btn edit-btn" data-id="${category.id}">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="action-btn delete-btn" data-id="${category.id}">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            `;
-            
-            categoriesList.appendChild(categoryItem);
-        });
-        
-        // Add event listeners to category action buttons
-        document.querySelectorAll('.category-actions .edit-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const categoryId = e.target.closest('.edit-btn').getAttribute('data-id');
-                editCategory(categoryId);
-            });
-        });
-        
-        document.querySelectorAll('.category-actions .delete-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const categoryId = e.target.closest('.delete-btn').getAttribute('data-id');
-                deleteCategory(categoryId);
-            });
-        });
-        
-    } catch (error) {
-        console.error('Error loading categories:', error);
-    }
-}
-
-async function loadOrdersTable() {
-    try {
-        const snapshot = await db.collection('orders')
-            .orderBy('createdAt', 'desc')
-            .get();
-        
-        adminOrders = [];
-        snapshot.docs.forEach(doc => {
-            adminOrders.push({ id: doc.id, ...doc.data() });
-        });
-        
-        const tbody = ordersTable.querySelector('tbody');
-        tbody.innerHTML = '';
-        
-        adminOrders.forEach(order => {
-            const row = createOrderRow(order);
-            tbody.appendChild(row);
-        });
-    } catch (error) {
-        console.error('Error loading orders:', error);
-    }
-}
-
-async function loadUsersTable() {
-    try {
-        const snapshot = await db.collection('users')
-            .orderBy('createdAt', 'desc')
-            .get();
-        
-        adminUsers = [];
-        snapshot.docs.forEach(doc => {
-            adminUsers.push({ id: doc.id, ...doc.data() });
-        });
-        
-        const tbody = usersTable.querySelector('tbody');
-        tbody.innerHTML = '';
-        
-        adminUsers.forEach(user => {
-            const row = createUserRow(user);
-            tbody.appendChild(row);
-        });
-    } catch (error) {
-        console.error('Error loading users:', error);
-    }
-}
-
-async function loadBannersManagement() {
-    try {
-        const snapshot = await db.collection('banners').get();
-        adminBanners = [];
-        snapshot.docs.forEach(doc => {
-            adminBanners.push({ id: doc.id, ...doc.data() });
-        });
-        
-        const bannersGrid = document.querySelector('.banners-grid');
-        if (!bannersGrid) return;
-        
-        bannersGrid.innerHTML = '';
-        
-        adminBanners.forEach(banner => {
-            const bannerCard = document.createElement('div');
-            bannerCard.className = 'banner-card';
-            bannerCard.innerHTML = `
-                <img src="${banner.imageUrl}" alt="Banner">
-                <div class="banner-info">
-                    <span>${new Date(banner.createdAt?.toDate()).toLocaleDateString()}</span>
-                    <div class="action-buttons">
-                        <button class="action-btn delete-btn" data-id="${banner.id}">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            bannersGrid.appendChild(bannerCard);
-        });
-        
-        // Add event listeners to delete buttons
-        document.querySelectorAll('.banner-info .delete-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const bannerId = e.target.closest('.delete-btn').getAttribute('data-id');
-                deleteBanner(bannerId);
-            });
-        });
-        
-    } catch (error) {
-        console.error('Error loading banners:', error);
-    }
-}
-
-// Row Creation Functions
+// Create Product Table Row
 function createProductRow(product) {
     const row = document.createElement('tr');
+    
+    // Format date
+    const createdAt = product.createdAt?.toDate ? product.createdAt.toDate() : new Date();
+    const formattedDate = createdAt.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
     
     row.innerHTML = `
         <td>
             <img src="${product.imageUrl || 'https://via.placeholder.com/50'}" 
                  alt="${product.title}" 
-                 style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
+                 class="product-table-image">
         </td>
-        <td>${product.title}</td>
+        <td>${product.title || 'Untitled'}</td>
         <td>${product.category || 'Uncategorized'}</td>
-        <td>৳ ${product.price?.toFixed(2) || '0.00'}</td>
+        <td>৳${(product.price || 0).toFixed(2)}</td>
         <td>${product.discount || 0}%</td>
-        <td>${product.stock || 0}</td>
         <td>
-            <span class="status-badge ${product.status === 'active' ? 'status-delivered' : 'status-cancelled'}">
+            <span class="status-badge ${product.status === 'active' ? 'status-active' : 'status-inactive'}">
                 ${product.status || 'inactive'}
             </span>
         </td>
         <td>
             <div class="action-buttons">
-                <button class="action-btn edit-btn" data-id="${product.id}">
+                <button class="action-btn edit-btn" data-id="${product.id}" title="Edit">
                     <i class="fas fa-edit"></i>
                 </button>
-                <button class="action-btn delete-btn" data-id="${product.id}">
+                <button class="action-btn delete-btn" data-id="${product.id}" title="Delete">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
         </td>
     `;
     
-    // Add event listeners
+    // Add event listeners to action buttons
     const editBtn = row.querySelector('.edit-btn');
-    editBtn.addEventListener('click', () => editProduct(product.id));
-    
     const deleteBtn = row.querySelector('.delete-btn');
-    deleteBtn.addEventListener('click', () => deleteProduct(product.id));
+    
+    if (editBtn) {
+        editBtn.addEventListener('click', () => {
+            editProduct(product.id);
+        });
+    }
+    
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', () => {
+            deleteProduct(product.id, product.title);
+        });
+    }
     
     return row;
 }
 
+// Load Categories
+async function loadCategories() {
+    const categoriesGrid = document.querySelector('.categories-grid-admin');
+    if (!categoriesGrid) return;
+    
+    try {
+        const snapshot = await db.collection('categories').orderBy('name').get();
+        categoriesGrid.innerHTML = '';
+        
+        if (snapshot.empty) {
+            categoriesGrid.innerHTML = `
+                <div class="loading-card">No categories found</div>
+            `;
+            return;
+        }
+        
+        snapshot.forEach(doc => {
+            const category = { id: doc.id, ...doc.data() };
+            const card = createCategoryCard(category);
+            categoriesGrid.appendChild(card);
+        });
+    } catch (error) {
+        console.error('Error loading categories:', error);
+        categoriesGrid.innerHTML = `
+            <div class="loading-card">Error loading categories</div>
+        `;
+        showToast('Error loading categories', 'error');
+    }
+}
+
+// Create Category Card
+function createCategoryCard(category) {
+    const card = document.createElement('div');
+    card.className = 'category-card-admin';
+    
+    card.innerHTML = `
+        <div class="category-icon-admin" style="background-color: ${category.color || '#f85606'}">
+            <i class="${category.icon || 'fas fa-tag'}"></i>
+        </div>
+        <h3>${category.name}</h3>
+        <p>${category.status || 'active'}</p>
+        <div class="category-actions">
+            <button class="action-btn edit-btn" data-id="${category.id}" title="Edit">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button class="action-btn delete-btn" data-id="${category.id}" title="Delete">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    `;
+    
+    // Add event listeners to action buttons
+    const editBtn = card.querySelector('.edit-btn');
+    const deleteBtn = card.querySelector('.delete-btn');
+    
+    if (editBtn) {
+        editBtn.addEventListener('click', () => {
+            editCategory(category.id);
+        });
+    }
+    
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', () => {
+            deleteCategory(category.id, category.name);
+        });
+    }
+    
+    return card;
+}
+
+// Load Orders
+async function loadOrders(filter = 'all') {
+    const ordersTableBody = document.getElementById('ordersTableBody');
+    if (!ordersTableBody) return;
+    
+    try {
+        let query = db.collection('orders').orderBy('createdAt', 'desc');
+        
+        // Apply filter if not 'all'
+        if (filter !== 'all') {
+            query = query.where('status', '==', filter);
+        }
+        
+        const snapshot = await query.get();
+        ordersTableBody.innerHTML = '';
+        
+        if (snapshot.empty) {
+            ordersTableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="loading-row">No orders found</td>
+                </tr>
+            `;
+            return;
+        }
+        
+        snapshot.forEach(doc => {
+            const order = { id: doc.id, ...doc.data() };
+            const row = createOrderRow(order);
+            ordersTableBody.appendChild(row);
+        });
+    } catch (error) {
+        console.error('Error loading orders:', error);
+        ordersTableBody.innerHTML = `
+            <tr>
+                <td colspan="6" class="loading-row">Error loading orders</td>
+            </tr>
+        `;
+        showToast('Error loading orders', 'error');
+    }
+}
+
+// Create Order Table Row
 function createOrderRow(order) {
     const row = document.createElement('tr');
-    const date = order.createdAt?.toDate ? order.createdAt.toDate() : new Date();
+    
+    // Format date
+    const orderDate = order.createdAt?.toDate ? order.createdAt.toDate() : new Date();
+    const formattedDate = orderDate.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+    });
     
     row.innerHTML = `
-        <td>${order.orderId}</td>
+        <td>${order.orderId || order.id}</td>
         <td>${order.userName || 'Customer'}</td>
-        <td>${order.items?.length || 0} items</td>
-        <td>৳ ${order.total?.toFixed(2) || '0.00'}</td>
+        <td>${formattedDate}</td>
+        <td>৳${(order.total || 0).toFixed(2)}</td>
         <td>
-            <select class="order-status-select" data-id="${order.id}">
-                <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
-                <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>Processing</option>
-                <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
-                <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
-                <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
-            </select>
+            <span class="status-badge status-${order.status || 'pending'}">
+                ${order.status || 'pending'}
+            </span>
         </td>
-        <td>${date.toLocaleDateString()}</td>
         <td>
-            <button class="action-btn view-btn view-order-btn" data-id="${order.id}">
-                <i class="fas fa-eye"></i>
-            </button>
+            <div class="action-buttons">
+                <button class="action-btn view-btn" data-id="${order.id}" title="View Details">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <select class="status-select" data-id="${order.id}" data-current="${order.status}">
+                    <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+                    <option value="approved" ${order.status === 'approved' ? 'selected' : ''}>Approved</option>
+                    <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+                </select>
+            </div>
         </td>
     `;
     
-    // Add event listener for status change
-    const statusSelect = row.querySelector('.order-status-select');
-    statusSelect.addEventListener('change', (e) => {
-        updateOrderStatus(order.id, e.target.value);
-    });
+    // Add event listeners
+    const viewBtn = row.querySelector('.view-btn');
+    const statusSelect = row.querySelector('.status-select');
     
-    // Add event listener for view order
-    const viewBtn = row.querySelector('.view-order-btn');
-    viewBtn.addEventListener('click', () => viewOrderDetails(order));
+    if (viewBtn) {
+        viewBtn.addEventListener('click', () => {
+            viewOrderDetails(order.id);
+        });
+    }
+    
+    if (statusSelect) {
+        statusSelect.addEventListener('change', (e) => {
+            updateOrderStatus(order.id, e.target.value);
+        });
+    }
     
     return row;
 }
 
+// Load Banners
+async function loadBanners() {
+    const bannersGrid = document.querySelector('.banners-grid');
+    if (!bannersGrid) return;
+    
+    try {
+        const snapshot = await db.collection('banners').orderBy('createdAt', 'desc').get();
+        bannersGrid.innerHTML = '';
+        
+        if (snapshot.empty) {
+            bannersGrid.innerHTML = `
+                <div class="loading-card">No banners found</div>
+            `;
+            return;
+        }
+        
+        snapshot.forEach(doc => {
+            const banner = { id: doc.id, ...doc.data() };
+            const card = createBannerCard(banner);
+            bannersGrid.appendChild(card);
+        });
+    } catch (error) {
+        console.error('Error loading banners:', error);
+        bannersGrid.innerHTML = `
+            <div class="loading-card">Error loading banners</div>
+        `;
+        showToast('Error loading banners', 'error');
+    }
+}
+
+// Create Banner Card
+function createBannerCard(banner) {
+    const card = document.createElement('div');
+    card.className = 'banner-card';
+    
+    card.innerHTML = `
+        <img src="${banner.imageUrl}" alt="${banner.title || 'Banner'}" class="banner-image">
+        <div class="banner-info">
+            <div class="banner-title">${banner.title || 'Untitled Banner'}</div>
+            <p>Status: ${banner.status || 'active'}</p>
+            <div class="banner-actions">
+                <button class="action-btn edit-btn" data-id="${banner.id}" title="Edit">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="action-btn delete-btn" data-id="${banner.id}" title="Delete">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    
+    // Add event listeners to action buttons
+    const editBtn = card.querySelector('.edit-btn');
+    const deleteBtn = card.querySelector('.delete-btn');
+    
+    if (editBtn) {
+        editBtn.addEventListener('click', () => {
+            editBanner(banner.id);
+        });
+    }
+    
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', () => {
+            deleteBanner(banner.id, banner.title);
+        });
+    }
+    
+    return card;
+}
+
+// Load Users
+async function loadUsers() {
+    const usersTableBody = document.getElementById('usersTableBody');
+    if (!usersTableBody) return;
+    
+    try {
+        const snapshot = await db.collection('users').orderBy('createdAt', 'desc').get();
+        usersTableBody.innerHTML = '';
+        
+        if (snapshot.empty) {
+            usersTableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="loading-row">No users found</td>
+                </tr>
+            `;
+            return;
+        }
+        
+        snapshot.forEach(doc => {
+            const user = { id: doc.id, ...doc.data() };
+            const row = createUserRow(user);
+            usersTableBody.appendChild(row);
+        });
+    } catch (error) {
+        console.error('Error loading users:', error);
+        usersTableBody.innerHTML = `
+            <tr>
+                <td colspan="5" class="loading-row">Error loading users</td>
+            </tr>
+        `;
+        showToast('Error loading users', 'error');
+    }
+}
+
+// Create User Table Row
 function createUserRow(user) {
     const row = document.createElement('tr');
-    const date = user.createdAt?.toDate ? user.createdAt.toDate() : new Date();
+    
+    // Format date
+    const joinedDate = user.createdAt?.toDate ? user.createdAt.toDate() : new Date();
+    const formattedDate = joinedDate.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+    });
     
     row.innerHTML = `
-        <td>${user.name}</td>
+        <td>${user.name || 'No Name'}</td>
         <td>${user.email}</td>
         <td>
-            <span class="status-badge ${user.role === 'admin' ? 'status-processing' : 'status-delivered'}">
+            <span class="status-badge ${user.role === 'admin' ? 'status-approved' : 'status-pending'}">
                 ${user.role || 'user'}
             </span>
         </td>
-        <td>${date.toLocaleDateString()}</td>
-        <td>${user.ordersCount || 0}</td>
+        <td>${formattedDate}</td>
         <td>
             <div class="action-buttons">
-                <button class="action-btn edit-btn" data-id="${user.id}">
-                    <i class="fas fa-edit"></i>
+                <button class="action-btn delete-btn" data-id="${user.id}" title="Delete User">
+                    <i class="fas fa-trash"></i>
                 </button>
             </div>
         </td>
     `;
     
+    // Add event listener to delete button
+    const deleteBtn = row.querySelector('.delete-btn');
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', () => {
+            deleteUser(user.id, user.name);
+        });
+    }
+    
     return row;
 }
 
-// Form Handling Functions
+// Product Modal Functions
+function showProductModal(product = null) {
+    const modalTitle = document.getElementById('productModalTitle');
+    const productForm = document.getElementById('productForm');
+    const imagePreview = document.getElementById('imagePreview');
+    
+    // Reset form
+    productForm.reset();
+    imagePreview.innerHTML = '<p>Image preview will appear here</p>';
+    
+    // Load categories for dropdown
+    loadCategoryDropdown();
+    
+    if (product) {
+        // Edit mode
+        isEditingProduct = true;
+        currentEditId = product.id;
+        modalTitle.textContent = 'Edit Product';
+        
+        // Fill form with product data
+        document.getElementById('productName').value = product.title || '';
+        document.getElementById('productPrice').value = product.price || '';
+        document.getElementById('productDiscount').value = product.discount || 0;
+        document.getElementById('productDescription').value = product.description || '';
+        document.getElementById('productStatus').value = product.status || 'active';
+        
+        // Set category if exists
+        setTimeout(() => {
+            const categorySelect = document.getElementById('productCategory');
+            if (categorySelect && product.category) {
+                categorySelect.value = product.category;
+            }
+        }, 100);
+        
+        // Show image preview
+        if (product.imageUrl) {
+            imagePreview.innerHTML = `<img src="${product.imageUrl}" alt="Preview">`;
+        }
+    } else {
+        // Add mode
+        isEditingProduct = false;
+        currentEditId = null;
+        modalTitle.textContent = 'Add New Product';
+    }
+    
+    showModal(adminProductModal);
+}
+
+async function loadCategoryDropdown() {
+    const categorySelect = document.getElementById('productCategory');
+    if (!categorySelect) return;
+    
+    try {
+        const snapshot = await db.collection('categories').where('status', '==', 'active').get();
+        categorySelect.innerHTML = '<option value="">Select Category</option>';
+        
+        snapshot.forEach(doc => {
+            const category = doc.data();
+            const option = document.createElement('option');
+            option.value = category.name;
+            option.textContent = category.name;
+            categorySelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading categories dropdown:', error);
+    }
+}
+
+// Category Modal Functions
+function showCategoryModal(category = null) {
+    const modalTitle = document.getElementById('categoryModalTitle');
+    const categoryForm = document.getElementById('categoryForm');
+    
+    // Reset form
+    categoryForm.reset();
+    
+    if (category) {
+        // Edit mode
+        isEditingCategory = true;
+        currentEditId = category.id;
+        modalTitle.textContent = 'Edit Category';
+        
+        // Fill form with category data
+        document.getElementById('categoryName').value = category.name || '';
+        document.getElementById('categoryIcon').value = category.icon || 'fas fa-tag';
+        document.getElementById('categoryColor').value = category.color || '#f85606';
+        document.getElementById('categoryStatus').value = category.status || 'active';
+    } else {
+        // Add mode
+        isEditingCategory = false;
+        currentEditId = null;
+        modalTitle.textContent = 'Add New Category';
+        document.getElementById('categoryColor').value = '#f85606';
+    }
+    
+    showModal(adminCategoryModal);
+}
+
+// Banner Modal Functions
+function showBannerModal(banner = null) {
+    const modalTitle = document.getElementById('bannerModalTitle');
+    const bannerForm = document.getElementById('bannerForm');
+    const bannerPreview = document.getElementById('bannerPreview');
+    
+    // Reset form
+    bannerForm.reset();
+    bannerPreview.innerHTML = '<p>Banner preview will appear here</p>';
+    
+    if (banner) {
+        // Edit mode
+        isEditingBanner = true;
+        currentEditId = banner.id;
+        modalTitle.textContent = 'Edit Banner';
+        
+        // Fill form with banner data
+        document.getElementById('bannerTitle').value = banner.title || '';
+        document.getElementById('bannerStatus').value = banner.status || 'active';
+        
+        // Show image preview
+        if (banner.imageUrl) {
+            bannerPreview.innerHTML = `<img src="${banner.imageUrl}" alt="Preview">`;
+        }
+    } else {
+        // Add mode
+        isEditingBanner = false;
+        currentEditId = null;
+        modalTitle.textContent = 'Add New Banner';
+    }
+    
+    showModal(adminBannerModal);
+}
+
+// Form Submission Handlers
 async function handleProductSubmit(e) {
     e.preventDefault();
     
-    const name = document.getElementById('product-name').value.trim();
-    const category = document.getElementById('product-category').value;
-    const price = parseFloat(document.getElementById('product-price').value);
-    const discount = parseInt(document.getElementById('product-discount').value) || 0;
-    const description = document.getElementById('product-description').value;
-    const stock = parseInt(document.getElementById('product-stock').value) || 0;
-    const status = document.getElementById('product-status').value;
-    const imageFile = document.getElementById('product-image').files[0];
-    
-    // Validation
-    if (!name || !category || !price) {
-        showError('Please fill in all required fields');
-        return;
-    }
-    
-    showAdminLoading();
+    const saveBtn = document.getElementById('saveProductBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
     
     try {
-        let imageUrl = '';
-        
-        // Upload image if exists
-        if (imageFile) {
-            imageUrl = await uploadImage(imageFile, 'products');
-        } else if (currentEditingProduct) {
-            imageUrl = currentEditingProduct.imageUrl;
-        }
-        
         const productData = {
-            title: name,
-            category: category,
-            price: price,
-            discount: discount,
-            description: description,
-            stock: stock,
-            status: status,
-            imageUrl: imageUrl,
-            rating: 4.5,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            title: document.getElementById('productName').value,
+            category: document.getElementById('productCategory').value,
+            price: parseFloat(document.getElementById('productPrice').value),
+            discount: parseInt(document.getElementById('productDiscount').value) || 0,
+            description: document.getElementById('productDescription').value,
+            status: document.getElementById('productStatus').value,
+            updatedAt: new Date()
         };
         
-        if (currentEditingProduct) {
-            // Update existing product
-            await db.collection('products').doc(currentEditingProduct.id).update(productData);
-            showNotification('Product updated successfully!');
+        // Calculate discounted price
+        productData.discountedPrice = productData.price - (productData.price * productData.discount / 100);
+        
+        // Add default values
+        productData.rating = 4.5;
+        productData.reviewCount = 0;
+        
+        // Handle image upload
+        const imageFile = document.getElementById('productImage').files[0];
+        
+        if (imageFile) {
+            // Upload image to Firebase Storage
+            const imageUrl = await uploadImage(imageFile, 'products');
+            productData.imageUrl = imageUrl;
+        } else if (isEditingProduct && !imageFile) {
+            // Keep existing image if editing and no new image
+            // We'll handle this in the update logic
         } else {
-            // Add new product
-            productData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-            await db.collection('products').add(productData);
-            showNotification('Product added successfully!');
+            throw new Error('Product image is required');
         }
         
-        closeModal(addProductModal);
-        resetProductForm();
-        loadProductsTable();
-        loadDashboardStats();
+        if (isEditingProduct && currentEditId) {
+            // Update existing product
+            await db.collection('products').doc(currentEditId).update(productData);
+            showToast('Product updated successfully!', 'success');
+        } else {
+            // Add new product
+            productData.createdAt = new Date();
+            await db.collection('products').add(productData);
+            showToast('Product added successfully!', 'success');
+        }
+        
+        // Close modal and refresh products
+        hideModal(adminProductModal);
+        loadProducts();
         
     } catch (error) {
         console.error('Error saving product:', error);
-        showError('Failed to save product');
+        showToast(`Error: ${error.message}`, 'error');
     } finally {
-        hideAdminLoading();
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Product';
     }
 }
 
 async function handleCategorySubmit(e) {
     e.preventDefault();
     
-    const name = document.getElementById('category-name').value.trim();
-    const icon = document.getElementById('category-icon').value.trim();
-    const imageFile = document.getElementById('category-image').files[0];
-    
-    if (!name) {
-        showError('Category name is required');
-        return;
-    }
-    
-    showAdminLoading();
+    const saveBtn = document.getElementById('saveCategoryBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
     
     try {
-        let imageUrl = '';
-        
-        // Upload image if exists
-        if (imageFile) {
-            imageUrl = await uploadImage(imageFile, 'categories');
-        }
-        
         const categoryData = {
-            name: name,
-            iconUrl: icon || 'fas fa-box',
-            imageUrl: imageUrl,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            name: document.getElementById('categoryName').value,
+            icon: document.getElementById('categoryIcon').value,
+            color: document.getElementById('categoryColor').value,
+            status: document.getElementById('categoryStatus').value,
+            updatedAt: new Date()
         };
         
-        await db.collection('categories').add(categoryData);
+        if (isEditingCategory && currentEditId) {
+            // Update existing category
+            await db.collection('categories').doc(currentEditId).update(categoryData);
+            showToast('Category updated successfully!', 'success');
+        } else {
+            // Add new category
+            categoryData.createdAt = new Date();
+            await db.collection('categories').add(categoryData);
+            showToast('Category added successfully!', 'success');
+        }
         
-        closeModal(addCategoryModal);
-        categoryForm.reset();
-        showNotification('Category added successfully!');
-        loadCategoriesManagement();
+        // Close modal and refresh categories
+        hideModal(adminCategoryModal);
+        loadCategories();
+        loadCategoryDropdown(); // Refresh dropdown in product modal
         
     } catch (error) {
         console.error('Error saving category:', error);
-        showError('Failed to save category');
+        showToast(`Error: ${error.message}`, 'error');
     } finally {
-        hideAdminLoading();
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Category';
     }
 }
 
 async function handleBannerSubmit(e) {
     e.preventDefault();
     
-    const imageFile = document.getElementById('banner-image').files[0];
-    const link = document.getElementById('banner-link').value.trim();
-    
-    if (!imageFile) {
-        showError('Banner image is required');
-        return;
-    }
-    
-    showAdminLoading();
+    const saveBtn = document.getElementById('saveBannerBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
     
     try {
-        // Upload image
-        const imageUrl = await uploadImage(imageFile, 'banners');
-        
         const bannerData = {
-            imageUrl: imageUrl,
-            link: link || '',
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            title: document.getElementById('bannerTitle').value || 'Banner',
+            status: document.getElementById('bannerStatus').value,
+            updatedAt: new Date()
         };
         
-        await db.collection('banners').add(bannerData);
+        // Handle image upload
+        const imageFile = document.getElementById('bannerImage').files[0];
         
-        closeModal(addBannerModal);
-        bannerForm.reset();
-        showNotification('Banner added successfully!');
-        loadBannersManagement();
+        if (imageFile) {
+            // Upload image to Firebase Storage
+            const imageUrl = await uploadImage(imageFile, 'banners');
+            bannerData.imageUrl = imageUrl;
+        } else if (isEditingBanner && !imageFile) {
+            // Keep existing image if editing and no new image
+            // We'll handle this in the update logic
+        } else {
+            throw new Error('Banner image is required');
+        }
+        
+        if (isEditingBanner && currentEditId) {
+            // Update existing banner
+            await db.collection('banners').doc(currentEditId).update(bannerData);
+            showToast('Banner updated successfully!', 'success');
+        } else {
+            // Add new banner
+            bannerData.createdAt = new Date();
+            await db.collection('banners').add(bannerData);
+            showToast('Banner added successfully!', 'success');
+        }
+        
+        // Close modal and refresh banners
+        hideModal(adminBannerModal);
+        loadBanners();
         
     } catch (error) {
         console.error('Error saving banner:', error);
-        showError('Failed to save banner');
+        showToast(`Error: ${error.message}`, 'error');
     } finally {
-        hideAdminLoading();
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Banner';
     }
 }
 
-// Edit/Delete Functions
+// Edit Functions
 async function editProduct(productId) {
-    const product = adminProducts.find(p => p.id === productId);
-    if (!product) return;
-    
-    currentEditingProduct = product;
-    
-    // Fill form with product data
-    document.getElementById('product-name').value = product.title;
-    document.getElementById('product-category').value = product.category;
-    document.getElementById('product-price').value = product.price;
-    document.getElementById('product-discount').value = product.discount || 0;
-    document.getElementById('product-description').value = product.description || '';
-    document.getElementById('product-stock').value = product.stock || 0;
-    document.getElementById('product-status').value = product.status || 'active';
-    
-    // Show image preview if exists
-    if (product.imageUrl) {
-        const preview = document.getElementById('image-preview');
-        preview.innerHTML = `<img src="${product.imageUrl}" alt="Current product image">`;
-    }
-    
-    openModal(addProductModal);
-}
-
-async function deleteProduct(productId) {
-    if (!confirm('Are you sure you want to delete this product?')) return;
-    
-    showAdminLoading();
-    
     try {
-        await db.collection('products').doc(productId).delete();
-        showNotification('Product deleted successfully!');
-        loadProductsTable();
-        loadDashboardStats();
+        const doc = await db.collection('products').doc(productId).get();
+        if (doc.exists) {
+            const product = { id: doc.id, ...doc.data() };
+            showProductModal(product);
+        } else {
+            showToast('Product not found', 'error');
+        }
     } catch (error) {
-        console.error('Error deleting product:', error);
-        showError('Failed to delete product');
-    } finally {
-        hideAdminLoading();
+        console.error('Error loading product for edit:', error);
+        showToast('Error loading product', 'error');
     }
 }
 
 async function editCategory(categoryId) {
-    // Implement category edit functionality
-    showNotification('Category edit feature coming soon!');
-}
-
-async function deleteCategory(categoryId) {
-    if (!confirm('Are you sure you want to delete this category?')) return;
-    
-    showAdminLoading();
-    
     try {
-        await db.collection('categories').doc(categoryId).delete();
-        showNotification('Category deleted successfully!');
-        loadCategoriesManagement();
+        const doc = await db.collection('categories').doc(categoryId).get();
+        if (doc.exists) {
+            const category = { id: doc.id, ...doc.data() };
+            showCategoryModal(category);
+        } else {
+            showToast('Category not found', 'error');
+        }
     } catch (error) {
-        console.error('Error deleting category:', error);
-        showError('Failed to delete category');
-    } finally {
-        hideAdminLoading();
+        console.error('Error loading category for edit:', error);
+        showToast('Error loading category', 'error');
     }
 }
 
-async function deleteBanner(bannerId) {
-    if (!confirm('Are you sure you want to delete this banner?')) return;
-    
-    showAdminLoading();
-    
+async function editBanner(bannerId) {
     try {
-        await db.collection('banners').doc(bannerId).delete();
-        showNotification('Banner deleted successfully!');
-        loadBannersManagement();
+        const doc = await db.collection('banners').doc(bannerId).get();
+        if (doc.exists) {
+            const banner = { id: doc.id, ...doc.data() };
+            showBannerModal(banner);
+        } else {
+            showToast('Banner not found', 'error');
+        }
     } catch (error) {
-        console.error('Error deleting banner:', error);
-        showError('Failed to delete banner');
-    } finally {
-        hideAdminLoading();
+        console.error('Error loading banner for edit:', error);
+        showToast('Error loading banner', 'error');
     }
 }
 
-async function updateOrderStatus(orderId, status) {
-    showAdminLoading();
-    
+// Delete Functions
+async function deleteProduct(productId, productName) {
+    if (confirm(`Are you sure you want to delete "${productName}"?`)) {
+        try {
+            await db.collection('products').doc(productId).delete();
+            showToast('Product deleted successfully', 'success');
+            loadProducts();
+        } catch (error) {
+            console.error('Error deleting product:', error);
+            showToast('Error deleting product', 'error');
+        }
+    }
+}
+
+async function deleteCategory(categoryId, categoryName) {
+    if (confirm(`Are you sure you want to delete "${categoryName}"?`)) {
+        try {
+            await db.collection('categories').doc(categoryId).delete();
+            showToast('Category deleted successfully', 'success');
+            loadCategories();
+            loadCategoryDropdown();
+        } catch (error) {
+            console.error('Error deleting category:', error);
+            showToast('Error deleting category', 'error');
+        }
+    }
+}
+
+async function deleteBanner(bannerId, bannerTitle) {
+    if (confirm(`Are you sure you want to delete "${bannerTitle}"?`)) {
+        try {
+            await db.collection('banners').doc(bannerId).delete();
+            showToast('Banner deleted successfully', 'success');
+            loadBanners();
+        } catch (error) {
+            console.error('Error deleting banner:', error);
+            showToast('Error deleting banner', 'error');
+        }
+    }
+}
+
+async function deleteUser(userId, userName) {
+    if (confirm(`Are you sure you want to delete user "${userName}"?`)) {
+        try {
+            await db.collection('users').doc(userId).delete();
+            showToast('User deleted successfully', 'success');
+            loadUsers();
+        } catch (error) {
+            console.error('Error deleting user:', error);
+            showToast('Error deleting user', 'error');
+        }
+    }
+}
+
+// Order Functions
+async function viewOrderDetails(orderId) {
+    try {
+        const doc = await db.collection('orders').doc(orderId).get();
+        if (doc.exists) {
+            const order = doc.data();
+            
+            let orderDetails = `Order ID: ${order.orderId}\n`;
+            orderDetails += `Customer: ${order.userName}\n`;
+            orderDetails += `Phone: ${order.userPhone}\n`;
+            orderDetails += `Address: ${order.userAddress}\n`;
+            orderDetails += `Payment: ${order.paymentMethod}\n`;
+            orderDetails += `Status: ${order.status}\n`;
+            orderDetails += `Total: ৳${order.total.toFixed(2)}\n\n`;
+            orderDetails += 'Items:\n';
+            
+            order.items.forEach(item => {
+                orderDetails += `- ${item.title} x ${item.quantity}: ৳${(item.price * item.quantity).toFixed(2)}\n`;
+            });
+            
+            alert(orderDetails);
+        } else {
+            showToast('Order not found', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading order details:', error);
+        showToast('Error loading order details', 'error');
+    }
+}
+
+async function updateOrderStatus(orderId, newStatus) {
     try {
         await db.collection('orders').doc(orderId).update({
-            status: status,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            status: newStatus,
+            updatedAt: new Date()
         });
-        
-        showNotification(`Order status updated to ${status}`);
-        loadOrdersTable();
-        loadRecentOrders();
-        loadDashboardStats();
+        showToast('Order status updated successfully', 'success');
+        loadOrders(document.getElementById('orderFilter').value);
     } catch (error) {
         console.error('Error updating order status:', error);
-        showError('Failed to update order status');
-    } finally {
-        hideAdminLoading();
+        showToast('Error updating order status', 'error');
     }
 }
 
-function viewOrderDetails(order) {
-    // Create order details modal
-    const modal = document.createElement('div');
-    modal.className = 'admin-modal active';
-    modal.innerHTML = `
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Order Details - ${order.orderId}</h3>
-                <span class="close-modal">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="order-info">
-                    <p><strong>Customer:</strong> ${order.userName} (${order.userEmail})</p>
-                    <p><strong>Date:</strong> ${order.createdAt?.toDate().toLocaleString()}</p>
-                    <p><strong>Status:</strong> ${order.status}</p>
-                    <p><strong>Total:</strong> ৳ ${order.total?.toFixed(2)}</p>
-                </div>
-                
-                <h4>Order Items</h4>
-                <div class="order-items">
-                    ${order.items?.map(item => `
-                        <div class="order-item">
-                            <img src="${item.imageUrl || 'https://via.placeholder.com/50'}" 
-                                 alt="${item.title}" 
-                                 style="width: 50px; height: 50px;">
-                            <div>
-                                <p><strong>${item.title}</strong></p>
-                                <p>Price: ৳ ${item.price?.toFixed(2)} x ${item.quantity} = ৳ ${(item.price * item.quantity).toFixed(2)}</p>
-                            </div>
-                        </div>
-                    `).join('') || '<p>No items found</p>'}
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    // Add event listener to close modal
-    const closeBtn = modal.querySelector('.close-modal');
-    closeBtn.addEventListener('click', () => {
-        modal.remove();
-    });
-    
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.remove();
-        }
-    });
-}
-
-// Filter Functions
-function filterOrders() {
-    const status = orderStatusFilter.value;
-    const date = orderDateFilter.value;
-    
-    const filteredOrders = adminOrders.filter(order => {
-        let match = true;
-        
-        if (status !== 'all' && order.status !== status) {
-            match = false;
-        }
-        
-        if (date) {
-            const orderDate = order.createdAt?.toDate ? 
-                order.createdAt.toDate().toISOString().split('T')[0] : 
-                new Date().toISOString().split('T')[0];
-            
-            if (orderDate !== date) {
-                match = false;
-            }
-        }
-        
-        return match;
-    });
-    
-    const tbody = ordersTable.querySelector('tbody');
-    tbody.innerHTML = '';
-    
-    filteredOrders.forEach(order => {
-        const row = createOrderRow(order);
-        tbody.appendChild(row);
-    });
-}
-
-// Image Upload Functions
+// Image Upload Function
 async function uploadImage(file, folder) {
     return new Promise((resolve, reject) => {
         const storageRef = storage.ref();
-        const imageRef = storageRef.child(`${folder}/${Date.now()}_${file.name}`);
+        const fileRef = storageRef.child(`${folder}/${Date.now()}_${file.name}`);
         
-        const uploadTask = imageRef.put(file);
+        const uploadTask = fileRef.put(file);
         
         uploadTask.on('state_changed',
             (snapshot) => {
-                // Progress monitoring (optional)
+                // Progress monitoring can be added here
                 const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
                 console.log(`Upload is ${progress}% done`);
             },
             (error) => {
-                console.error('Upload error:', error);
                 reject(error);
             },
             async () => {
@@ -1008,183 +1201,86 @@ async function uploadImage(file, folder) {
     });
 }
 
+// Image Preview Function
 function previewImage(input, previewId) {
     const preview = document.getElementById(previewId);
+    if (!preview) return;
     
     if (input.files && input.files[0]) {
         const reader = new FileReader();
         
         reader.onload = function(e) {
-            preview.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width: 200px; border-radius: 6px; margin-top: 10px;">`;
+            preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
         };
         
         reader.readAsDataURL(input.files[0]);
     } else {
-        preview.innerHTML = '';
+        preview.innerHTML = '<p>Image preview will appear here</p>';
     }
 }
 
-// UI Helper Functions
-function openModal(modal) {
-    modal.classList.add('active');
+// Modal Functions
+function showModal(modal) {
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
 }
 
-function closeModal(modal) {
-    modal.classList.remove('active');
+function hideModal(modal) {
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+        
+        // Reset form states
+        isEditingProduct = false;
+        isEditingCategory = false;
+        isEditingBanner = false;
+        currentEditId = null;
+    }
 }
 
-function closeAllModals() {
-    closeModal(addProductModal);
-    closeModal(addCategoryModal);
-    closeModal(addBannerModal);
-}
-
-function resetProductForm() {
-    productForm.reset();
-    document.getElementById('image-preview').innerHTML = '';
-    currentEditingProduct = null;
-}
-
-function showAdminLoading() {
-    adminLoading.classList.add('active');
-}
-
-function hideAdminLoading() {
-    adminLoading.classList.remove('active');
-}
-
-function showNotification(message, type = 'success') {
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.innerHTML = `
-        <span>${message}</span>
-        <button class="notification-close">&times;</button>
-    `;
+// Toast Notification
+function showToast(message, type = 'info') {
+    adminToastMessage.textContent = message;
+    adminToast.className = 'admin-toast';
+    adminToast.classList.add('show');
     
-    document.body.appendChild(notification);
-    
-    // Add styles if not already added
-    if (!document.querySelector('#admin-notification-styles')) {
-        const style = document.createElement('style');
-        style.id = 'admin-notification-styles';
-        style.textContent = `
-            .notification {
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 15px 20px;
-                border-radius: 8px;
-                color: white;
-                font-weight: 500;
-                z-index: 2000;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                min-width: 300px;
-                max-width: 400px;
-                animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            }
-            .notification.success {
-                background-color: #4caf50;
-            }
-            .notification.error {
-                background-color: #f44336;
-            }
-            .notification-close {
-                background: none;
-                border: none;
-                color: white;
-                font-size: 20px;
-                cursor: pointer;
-                margin-left: 15px;
-            }
-            @keyframes slideIn {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-            @keyframes fadeOut {
-                to { opacity: 0; }
-            }
-        `;
-        document.head.appendChild(style);
+    // Add type-based styling
+    if (type === 'success') {
+        adminToast.style.backgroundColor = '#27ae60';
+    } else if (type === 'error') {
+        adminToast.style.backgroundColor = '#e74c3c';
+    } else if (type === 'warning') {
+        adminToast.style.backgroundColor = '#f39c12';
+    } else {
+        adminToast.style.backgroundColor = '#3498db';
     }
     
-    notification.querySelector('.notification-close').addEventListener('click', () => {
-        notification.remove();
-    });
-    
+    // Auto hide after 3 seconds
     setTimeout(() => {
-        if (notification.parentNode) {
-            notification.remove();
-        }
+        adminToast.classList.remove('show');
     }, 3000);
 }
 
-function showError(message) {
-    showNotification(message, 'error');
-}
-
-
-// app.js এর যেকোনো স্থানে এই ফাংশন যোগ করুন
-async function registerAsAdmin() {
-    const email = prompt("Enter admin email:");
-    const password = prompt("Enter admin password (min 6 characters):");
-    const name = prompt("Enter admin name:");
-    
-    if (!email || !password || !name) {
-        alert("All fields are required!");
-        return;
+// Auth Error Messages (reused from main app)
+function getAuthErrorMessage(error) {
+    switch (error.code) {
+        case 'auth/email-already-in-use':
+            return 'Email already in use';
+        case 'auth/invalid-email':
+            return 'Invalid email address';
+        case 'auth/operation-not-allowed':
+            return 'Email/password accounts are not enabled';
+        case 'auth/weak-password':
+            return 'Password is too weak';
+        case 'auth/user-disabled':
+            return 'User account is disabled';
+        case 'auth/user-not-found':
+            return 'User not found';
+        case 'auth/wrong-password':
+            return 'Incorrect password';
+        default:
+            return error.message;
     }
-    
-    if (password.length < 6) {
-        alert("Password must be at least 6 characters");
-        return;
-    }
-    
-    showLoading();
-    
-    try {
-        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-        await userCredential.user.updateProfile({ displayName: name });
-        
-        // Save user to Firestore with admin role
-        await db.collection('users').doc(userCredential.user.uid).set({
-            name: name,
-            email: email,
-            role: 'admin', // সরাসরি admin role সেট করা হচ্ছে
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        alert('Admin account created successfully!');
-        showNotification('Admin account created!');
-        
-    } catch (error) {
-        console.error('Admin registration error:', error);
-        alert('Error creating admin account: ' + error.message);
-    } finally {
-        hideLoading();
-    }
-}
-
-// ইউজার ইন্টারফেসে একটি এডমিন রেজিস্ট্রেশন বাটন যোগ করতে চাইলে
-// নিচের কোড যোগ করুন (app.js এর initEventListeners ফাংশনে):
-function initEventListeners() {
-    // ... existing code ...
-    
-    // Admin registration button (for development only)
-    const adminRegisterBtn = document.createElement('button');
-    adminRegisterBtn.textContent = 'Admin Register (Dev)';
-    adminRegisterBtn.style.position = 'fixed';
-    adminRegisterBtn.style.bottom = '10px';
-    adminRegisterBtn.style.right = '10px';
-    adminRegisterBtn.style.zIndex = '9999';
-    adminRegisterBtn.style.padding = '10px';
-    adminRegisterBtn.style.backgroundColor = '#ff6b00';
-    adminRegisterBtn.style.color = 'white';
-    adminRegisterBtn.style.border = 'none';
-    adminRegisterBtn.style.borderRadius = '5px';
-    adminRegisterBtn.style.cursor = 'pointer';
-    adminRegisterBtn.addEventListener('click', registerAsAdmin);
-    document.body.appendChild(adminRegisterBtn);
 }

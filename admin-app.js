@@ -257,7 +257,7 @@ function initAdminEventListeners() {
     }
 }
 
-// Admin Login Handler
+// Updated Admin Login Handler
 async function handleAdminLogin(e) {
     e.preventDefault();
     
@@ -265,28 +265,93 @@ async function handleAdminLogin(e) {
     const password = document.getElementById('adminPassword').value;
     const loginMessage = document.getElementById('adminLoginMessage');
     
+    // Clear previous messages
+    if (loginMessage) {
+        loginMessage.textContent = '';
+        loginMessage.className = 'login-message';
+    }
+    
     try {
-        const userCredential = await auth.signInWithEmailAndPassword(email, password);
-        const isAdmin = await checkIfAdmin(userCredential.user.uid);
+        console.log('Attempting login with:', email);
         
-        if (isAdmin) {
-            currentAdmin = userCredential.user;
-            showAdminDashboard();
-            loadDashboardData();
-            initAdminEventListeners();
-            showToast('Admin login successful!', 'success');
-        } else {
+        // Sign in with Firebase Auth
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+        
+        console.log('Firebase Auth successful, user ID:', user.uid);
+        
+        // Check if user exists in Firestore
+        const userDoc = await db.collection('users').doc(user.uid).get();
+        
+        if (!userDoc.exists) {
+            console.log('User not found in Firestore');
             await auth.signOut();
+            
+            if (loginMessage) {
+                loginMessage.textContent = 'User account not found. Please contact administrator.';
+                loginMessage.className = 'login-message error';
+            }
+            return;
+        }
+        
+        const userData = userDoc.data();
+        console.log('User data from Firestore:', userData);
+        
+        // Check if user has admin role
+        if (userData.role !== 'admin') {
+            console.log('User is not admin, role:', userData.role);
+            await auth.signOut();
+            
             if (loginMessage) {
                 loginMessage.textContent = 'Access denied. Admin privileges required.';
                 loginMessage.className = 'login-message error';
             }
+            return;
         }
+        
+        console.log('Admin login successful!');
+        currentAdmin = user;
+        
+        // Show success message
+        if (loginMessage) {
+            loginMessage.textContent = 'Login successful! Redirecting...';
+            loginMessage.className = 'login-message success';
+        }
+        
+        // Show admin dashboard after short delay
+        setTimeout(() => {
+            showAdminDashboard();
+            loadDashboardData();
+            initAdminEventListeners();
+            showToast('Admin login successful!', 'success');
+        }, 1000);
+        
     } catch (error) {
         console.error('Admin login error:', error);
         
+        // Show specific error messages
+        let errorMessage = 'Login failed. Please try again.';
+        
+        switch (error.code) {
+            case 'auth/user-not-found':
+                errorMessage = 'No account found with this email.';
+                break;
+            case 'auth/wrong-password':
+                errorMessage = 'Incorrect password.';
+                break;
+            case 'auth/invalid-email':
+                errorMessage = 'Invalid email address.';
+                break;
+            case 'auth/user-disabled':
+                errorMessage = 'This account has been disabled.';
+                break;
+            case 'auth/too-many-requests':
+                errorMessage = 'Too many login attempts. Please try again later.';
+                break;
+        }
+        
         if (loginMessage) {
-            loginMessage.textContent = getAuthErrorMessage(error);
+            loginMessage.textContent = errorMessage;
             loginMessage.className = 'login-message error';
         }
     }

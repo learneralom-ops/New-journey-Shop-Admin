@@ -85,3 +85,39 @@ function updateAuthUI(user) {
 
 // Export Firebase services
 export { auth, db, storage };
+
+
+// Admin user creation helper function
+async function createAdminUser() {
+    try {
+        // Check if admin already exists
+        const adminEmail = "learneralom@gmail.com";
+        const adminPassword = "Alom1234";
+        
+        // Try to create admin user
+        const userCredential = await auth.createUserWithEmailAndPassword(adminEmail, adminPassword);
+        
+        // Update user profile
+        await userCredential.user.updateProfile({
+            displayName: "Admin User"
+        });
+        
+        // Create user document in Firestore with admin role
+        await db.collection('users').doc(userCredential.user.uid).set({
+            name: "Admin User",
+            email: adminEmail,
+            role: 'admin',
+            createdAt: new Date()
+        });
+        
+        console.log("Admin user created successfully!");
+        console.log("Email:", adminEmail);
+        console.log("Password:", adminPassword);
+        
+    } catch (error) {
+        console.log("Admin user may already exist:", error.message);
+    }
+}
+
+// Call this function once to create admin user
+// createAdminUser();

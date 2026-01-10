@@ -1349,3 +1349,20 @@ function getAuthErrorMessage(error) {
             return error.message;
     }
 }
+
+
+
+// Check Firebase connection
+console.log('Firebase initialized:', firebase.apps.length > 0);
+
+// Check current auth state
+auth.onAuthStateChanged((user) => {
+    console.log('Auth state changed:', user ? 'User logged in' : 'No user');
+    if (user) {
+        console.log('User details:', {
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName
+        });
+    }
+});

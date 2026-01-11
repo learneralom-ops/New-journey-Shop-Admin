@@ -4,850 +4,1536 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>New Journey Shop - Admin Panel</title>
-    <link rel="stylesheet" href="admin-styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        :root {
+            --primary-color: #f57224;
+            --secondary-color: #2a2a2a;
+            --sidebar-color: #1e293b;
+            --sidebar-hover: #334155;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #3b82f6;
+            --light-bg: #f8fafc;
+            --border-color: #e2e8f0;
+            --text-color: #475569;
+            --text-dark: #1e293b;
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-color);
+            min-height: 100vh;
+        }
+
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Login Page */
+        .login-page {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .login-box {
+            background: white;
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-logo h1 {
+            color: var(--primary-color);
+            font-size: 28px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .login-logo p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .login-form .form-group {
+            margin-bottom: 20px;
+        }
+
+        .login-form label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .login-form input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .login-form input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(245, 114, 36, 0.1);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-login:hover {
+            background: #e5611d;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 114, 36, 0.3);
+        }
+
+        .login-error {
+            background: #fee;
+            color: #c33;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: #666;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back-link a:hover {
+            color: var(--primary-color);
+        }
+
+        /* Dashboard Page */
+        .dashboard-page {
+            display: none;
+            width: 100%;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: var(--sidebar-color);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            overflow-y: auto;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header h2 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+        }
+
+        .sidebar-header h2 i {
+            color: var(--primary-color);
+        }
+
+        .admin-profile {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .admin-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f57224, #fbbf24);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 30px;
+        }
+
+        .admin-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .admin-role {
+            font-size: 12px;
+            color: #94a3b8;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 3px 10px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+        }
+
+        .menu-item:hover {
+            background: var(--sidebar-hover);
+            color: white;
+            border-left-color: var(--primary-color);
+        }
+
+        .menu-item.active {
+            background: var(--sidebar-hover);
+            color: white;
+            border-left-color: var(--primary-color);
+        }
+
+        .menu-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .logout-item {
+            margin-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 20px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            transition: all 0.3s;
+        }
+
+        .top-navbar {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: var(--text-dark);
+            cursor: pointer;
+        }
+
+        .page-title h1 {
+            font-size: 24px;
+            color: var(--text-dark);
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .notification-btn {
+            position: relative;
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: var(--text-color);
+            cursor: pointer;
+        }
+
+        .notification-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger-color);
+            color: white;
+            font-size: 10px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .current-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .content-area {
+            padding: 30px;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .stat-info h3 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-info p {
+            color: var(--text-color);
+            font-size: 14px;
+        }
+
+        .stat-trend {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .trend-up {
+            color: var(--success-color);
+        }
+
+        .trend-down {
+            color: var(--danger-color);
+        }
+
+        /* Charts */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 992px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .chart-header h3 {
+            color: var(--text-dark);
+            font-size: 18px;
+        }
+
+        /* Tables */
+        .table-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .table-header h3 {
+            color: var(--text-dark);
+            font-size: 18px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #e5611d;
+        }
+
+        .btn-secondary {
+            background: var(--border-color);
+            color: var(--text-dark);
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #0da271;
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .admin-table th {
+            background: var(--light-bg);
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-dark);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .admin-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .admin-table tr:hover {
+            background: var(--light-bg);
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .status-processing {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .status-shipped {
+            background: #e0f2fe;
+            color: #0284c7;
+        }
+
+        .status-completed {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .status-cancelled {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .status-active {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .status-inactive {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            padding: 0;
+        }
+
+        .btn-edit {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .btn-edit:hover {
+            background: #bfdbfe;
+        }
+
+        .btn-delete {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .btn-delete:hover {
+            background: #fecaca;
+        }
+
+        .btn-view {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .btn-view:hover {
+            background: #dcfce7;
+        }
+
+        /* Form Controls */
+        .form-control {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(245, 114, 36, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            color: var(--text-dark);
+            font-size: 20px;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--text-dark);
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .close-modal:hover {
+            background: var(--border-color);
+        }
+
+        /* Product Image */
+        .product-image-small {
+            width: 40px;
+            height: 40px;
+            border-radius: 5px;
+            object-fit: cover;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .quick-action-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .quick-action-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .quick-action-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary-color), #fbbf24);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 20px;
+            color: white;
+        }
+
+        /* Notification Panel */
+        .notification-panel {
+            position: absolute;
+            top: 50px;
+            right: 0;
+            width: 350px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            z-index: 2000;
+            display: none;
+        }
+
+        .notification-panel.active {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .notification-header {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-header h4 {
+            color: var(--text-dark);
+        }
+
+        .notification-item {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .notification-item:hover {
+            background: var(--light-bg);
+        }
+
+        .notification-item.unread {
+            background: #f0f9ff;
+        }
+
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .notification-icon.order {
+            background: var(--info-color);
+        }
+
+        .notification-icon.user {
+            background: var(--success-color);
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 500;
+            color: var(--text-dark);
+            margin-bottom: 3px;
+        }
+
+        .notification-time {
+            font-size: 12px;
+            color: var(--text-color);
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 0;
+                transform: translateX(-250px);
+            }
+            
+            .sidebar.active {
+                width: 250px;
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .table-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .admin-table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            .action-buttons {
+                flex-wrap: wrap;
+            }
+            
+            .login-box {
+                padding: 30px 20px;
+            }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #94a3b8;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: var(--border-color);
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
-    <!-- Login Modal -->
-    <div id="adminLoginModal" class="modal">
-        <div class="modal-content admin-login-modal">
-            <div class="login-header">
-                <h2><i class="fas fa-lock"></i> Admin Login</h2>
-                <p>Enter your credentials to access the admin panel</p>
+    <!-- Login Page -->
+    <div class="login-page" id="loginPage">
+        <div class="login-box">
+            <div class="login-logo">
+                <h1><i class="fas fa-shopping-bag"></i> New Journey Shop</h1>
+                <p>Admin Panel - Secure Login</p>
             </div>
-            <form id="adminLoginForm">
+            
+            <form class="login-form" id="loginForm">
                 <div class="form-group">
                     <label for="adminEmail"><i class="fas fa-envelope"></i> Admin Email</label>
-                    <input type="email" id="adminEmail" required placeholder="Enter admin email">
+                    <input type="email" id="adminEmail" placeholder="admin@newjourneyshop.com" required>
                 </div>
+                
                 <div class="form-group">
-                    <label for="adminPassword"><i class="fas fa-key"></i> Password</label>
-                    <input type="password" id="adminPassword" required placeholder="Enter password">
+                    <label for="adminPassword"><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" id="adminPassword" placeholder="Enter your password" required>
                 </div>
+                
                 <button type="submit" class="btn-login">
                     <i class="fas fa-sign-in-alt"></i> Login to Admin Panel
                 </button>
+                
+                <div class="login-error" id="loginError">
+                    <i class="fas fa-exclamation-circle"></i> Invalid credentials. Please try again.
+                </div>
             </form>
-            <div class="login-footer">
-                <p>Only authorized administrators can access this panel</p>
+            
+            <div class="back-link">
+                <a href="index.html"><i class="fas fa-arrow-left"></i> Back to Main Store</a>
             </div>
-            <div id="adminLoginMessage" class="auth-message"></div>
         </div>
     </div>
 
-    <!-- Main Admin Container -->
-    <div class="admin-container" id="adminContainer">
+    <!-- Dashboard Page -->
+    <div class="admin-container dashboard-page" id="dashboardPage">
         <!-- Sidebar -->
-        <aside class="admin-sidebar">
+        <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <div class="logo">
-                    <i class="fas fa-shopping-bag"></i>
-                    <h2>New Journey Shop</h2>
-                    <span class="admin-badge">ADMIN</span>
+                <h2><i class="fas fa-shopping-bag"></i> New Journey Shop</h2>
+            </div>
+            
+            <div class="admin-profile">
+                <div class="admin-avatar">
+                    <i class="fas fa-user-cog"></i>
                 </div>
-                <div class="admin-info">
-                    <div class="admin-avatar">
-                        <i class="fas fa-user-shield"></i>
+                <div class="admin-name" id="adminName">Admin User</div>
+                <div class="admin-role">Super Admin</div>
+            </div>
+            
+            <div class="sidebar-menu">
+                <a class="menu-item active" data-section="dashboard">
+                    <i class="fas fa-chart-line"></i> Dashboard
+                </a>
+                <a class="menu-item" data-section="products">
+                    <i class="fas fa-box-open"></i> Products
+                </a>
+                <a class="menu-item" data-section="orders">
+                    <i class="fas fa-shopping-cart"></i> Orders
+                </a>
+                <a class="menu-item" data-section="users">
+                    <i class="fas fa-users"></i> Users
+                </a>
+                <a class="menu-item" data-section="categories">
+                    <i class="fas fa-tags"></i> Categories
+                </a>
+                <a class="menu-item" data-section="analytics">
+                    <i class="fas fa-chart-bar"></i> Analytics
+                </a>
+                <a class="menu-item" data-section="settings">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+                
+                <a class="menu-item logout-item" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content" id="mainContent">
+            <!-- Top Navbar -->
+            <div class="top-navbar">
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <div class="page-title">
+                    <h1>Admin Dashboard</h1>
+                </div>
+                
+                <div class="admin-actions">
+                    <div class="notification-wrapper">
+                        <button class="notification-btn" id="notificationBtn">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-count">3</span>
+                        </button>
+                        <div class="notification-panel" id="notificationPanel">
+                            <div class="notification-header">
+                                <h4>Notifications</h4>
+                                <button class="btn btn-sm" onclick="markAllAsRead()">Mark all as read</button>
+                            </div>
+                            <div id="notificationList">
+                                <!-- Notifications will be loaded here -->
+                            </div>
+                        </div>
                     </div>
-                    <div class="admin-details">
-                        <h3 id="adminName">Administrator</h3>
-                        <p id="adminEmailDisplay">admin@newjourneyshop.com</p>
+                    
+                    <div class="current-user">
+                        <i class="fas fa-user-circle"></i>
+                        <span id="currentUserName">Admin User</span>
                     </div>
                 </div>
             </div>
-
-            <nav class="sidebar-nav">
-                <ul class="nav-menu">
-                    <li class="nav-item active" data-section="dashboard">
-                        <a href="#">
-                            <i class="fas fa-tachometer-alt"></i>
-                            <span>Dashboard</span>
-                        </a>
-                    </li>
-                    <li class="nav-item" data-section="products">
-                        <a href="#">
-                            <i class="fas fa-box"></i>
-                            <span>Products</span>
-                            <span class="nav-badge" id="productsCount">0</span>
-                        </a>
-                    </li>
-                    <li class="nav-item" data-section="orders">
-                        <a href="#">
-                            <i class="fas fa-shopping-cart"></i>
-                            <span>Orders</span>
-                            <span class="nav-badge" id="ordersCount">0</span>
-                        </a>
-                    </li>
-                    <li class="nav-item" data-section="categories">
-                        <a href="#">
-                            <i class="fas fa-list"></i>
-                            <span>Categories</span>
-                        </a>
-                    </li>
-                    <li class="nav-item" data-section="users">
-                        <a href="#">
-                            <i class="fas fa-users"></i>
-                            <span>Users</span>
-                            <span class="nav-badge" id="usersCount">0</span>
-                        </a>
-                    </li>
-                    <li class="nav-item" data-section="analytics">
-                        <a href="#">
-                            <i class="fas fa-chart-line"></i>
-                            <span>Analytics</span>
-                        </a>
-                    </li>
-                    <li class="nav-item" data-section="settings">
-                        <a href="#">
-                            <i class="fas fa-cog"></i>
-                            <span>Settings</span>
-                        </a>
-                    </li>
-                </ul>
-
-                <div class="sidebar-footer">
-                    <button id="logoutBtn" class="btn-logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>Logout</span>
-                    </button>
-                </div>
-            </nav>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="admin-main">
-            <!-- Header -->
-            <header class="admin-header">
-                <div class="header-left">
-                    <button class="sidebar-toggle" id="sidebarToggle">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    <div class="breadcrumb">
-                        <span id="currentSection">Dashboard</span>
-                    </div>
-                </div>
-                <div class="header-right">
-                    <div class="header-actions">
-                        <button class="btn-notification" id="notificationBtn">
-                            <i class="fas fa-bell"></i>
-                            <span class="notification-badge" id="notificationCount">3</span>
-                        </button>
-                        <button class="btn-add" id="quickAddBtn">
-                            <i class="fas fa-plus"></i>
-                            <span>Quick Add</span>
-                        </button>
-                    </div>
-                    <div class="current-date" id="currentDate"></div>
-                </div>
-            </header>
-
+            
             <!-- Content Area -->
-            <div class="admin-content">
+            <div class="content-area">
                 <!-- Dashboard Section -->
-                <section id="dashboardSection" class="content-section active">
-                    <div class="section-header">
-                        <h2><i class="fas fa-tachometer-alt"></i> Dashboard Overview</h2>
-                        <div class="date-range">
-                            <select id="dashboardRange">
-                                <option value="today">Today</option>
-                                <option value="week">This Week</option>
-                                <option value="month" selected>This Month</option>
-                                <option value="year">This Year</option>
-                            </select>
+                <section class="dashboard-section" id="dashboardSection">
+                    <!-- Quick Actions -->
+                    <div class="quick-actions">
+                        <div class="quick-action-card" onclick="showAddProductModal()">
+                            <div class="quick-action-icon">
+                                <i class="fas fa-plus"></i>
+                            </div>
+                            <h4>Add Product</h4>
+                            <p>Add new product to store</p>
+                        </div>
+                        
+                        <div class="quick-action-card" onclick="showSection('orders')">
+                            <div class="quick-action-icon">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <h4>View Orders</h4>
+                            <p>Manage customer orders</p>
+                        </div>
+                        
+                        <div class="quick-action-card" onclick="showAddUserModal()">
+                            <div class="quick-action-icon">
+                                <i class="fas fa-user-plus"></i>
+                            </div>
+                            <h4>Add User</h4>
+                            <p>Create new admin user</p>
+                        </div>
+                        
+                        <div class="quick-action-card" onclick="generateReport()">
+                            <div class="quick-action-icon">
+                                <i class="fas fa-file-export"></i>
+                            </div>
+                            <h4>Generate Report</h4>
+                            <p>Export sales data</p>
                         </div>
                     </div>
-
-                    <!-- Stats Cards -->
+                    
+                    <!-- Stats -->
                     <div class="stats-grid">
                         <div class="stat-card">
-                            <div class="stat-icon" style="background-color: #4CAF50;">
+                            <div class="stat-icon" style="background: #dbeafe; color: #2563eb;">
                                 <i class="fas fa-shopping-cart"></i>
                             </div>
                             <div class="stat-info">
                                 <h3 id="totalOrders">0</h3>
                                 <p>Total Orders</p>
-                            </div>
-                            <div class="stat-change positive">
-                                <i class="fas fa-arrow-up"></i>
-                                <span id="ordersChange">0%</span>
+                                <div class="stat-trend trend-up">
+                                    <i class="fas fa-arrow-up"></i> 12% from last month
+                                </div>
                             </div>
                         </div>
-
+                        
                         <div class="stat-card">
-                            <div class="stat-icon" style="background-color: #2196F3;">
+                            <div class="stat-icon" style="background: #f0fdf4; color: #16a34a;">
                                 <i class="fas fa-dollar-sign"></i>
                             </div>
                             <div class="stat-info">
                                 <h3 id="totalRevenue">$0</h3>
                                 <p>Total Revenue</p>
-                            </div>
-                            <div class="stat-change positive">
-                                <i class="fas fa-arrow-up"></i>
-                                <span id="revenueChange">0%</span>
+                                <div class="stat-trend trend-up">
+                                    <i class="fas fa-arrow-up"></i> 8% from last month
+                                </div>
                             </div>
                         </div>
-
+                        
                         <div class="stat-card">
-                            <div class="stat-icon" style="background-color: #FF9800;">
+                            <div class="stat-icon" style="background: #fef3c7; color: #d97706;">
                                 <i class="fas fa-users"></i>
                             </div>
                             <div class="stat-info">
                                 <h3 id="totalUsers">0</h3>
                                 <p>Total Users</p>
-                            </div>
-                            <div class="stat-change positive">
-                                <i class="fas fa-arrow-up"></i>
-                                <span id="usersChange">0%</span>
+                                <div class="stat-trend trend-up">
+                                    <i class="fas fa-arrow-up"></i> 5% from last month
+                                </div>
                             </div>
                         </div>
-
+                        
                         <div class="stat-card">
-                            <div class="stat-icon" style="background-color: #9C27B0;">
-                                <i class="fas fa-box"></i>
+                            <div class="stat-icon" style="background: #fae8ff; color: #c026d3;">
+                                <i class="fas fa-box-open"></i>
                             </div>
                             <div class="stat-info">
                                 <h3 id="totalProducts">0</h3>
                                 <p>Total Products</p>
-                            </div>
-                            <div class="stat-change positive">
-                                <i class="fas fa-arrow-up"></i>
-                                <span id="productsChange">0%</span>
+                                <div class="stat-trend trend-down">
+                                    <i class="fas fa-arrow-down"></i> 2% from last month
+                                </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Charts and Tables -->
-                    <div class="dashboard-content">
-                        <div class="content-row">
-                            <!-- Revenue Chart -->
-                            <div class="content-card large">
-                                <div class="card-header">
-                                    <h3><i class="fas fa-chart-line"></i> Revenue Overview</h3>
-                                    <button class="btn-refresh" id="refreshRevenue">
-                                        <i class="fas fa-sync-alt"></i>
-                                    </button>
-                                </div>
-                                <div class="card-body">
-                                    <canvas id="revenueChart"></canvas>
-                                </div>
+                    
+                    <!-- Charts -->
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>Sales Overview</h3>
+                                <select id="salesPeriod" class="form-control" style="width: 150px;">
+                                    <option>Last 7 days</option>
+                                    <option>Last 30 days</option>
+                                    <option>Last 3 months</option>
+                                    <option>Last year</option>
+                                </select>
                             </div>
-
-                            <!-- Recent Orders -->
-                            <div class="content-card">
-                                <div class="card-header">
-                                    <h3><i class="fas fa-clock"></i> Recent Orders</h3>
-                                    <a href="#" class="view-all" data-section="orders">View All</a>
-                                </div>
-                                <div class="card-body">
-                                    <div class="table-responsive">
-                                        <table class="data-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Order ID</th>
-                                                    <th>Customer</th>
-                                                    <th>Amount</th>
-                                                    <th>Status</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="recentOrdersTable">
-                                                <!-- Recent orders will be loaded here -->
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
+                            <canvas id="salesChart" height="250"></canvas>
+                        </div>
+                        
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>Top Categories</h3>
+                                <button class="btn btn-sm" onclick="refreshCategoryChart()">
+                                    <i class="fas fa-sync-alt"></i> Refresh
+                                </button>
+                            </div>
+                            <canvas id="categoryChart" height="250"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Orders -->
+                    <div class="table-card">
+                        <div class="table-header">
+                            <h3>Recent Orders</h3>
+                            <div>
+                                <button class="btn btn-secondary" onclick="loadRecentOrders()">
+                                    <i class="fas fa-sync-alt"></i> Refresh
+                                </button>
+                                <button class="btn btn-primary" onclick="showSection('orders')">
+                                    <i class="fas fa-eye"></i> View All
+                                </button>
                             </div>
                         </div>
-
-                        <div class="content-row">
-                            <!-- Top Products -->
-                            <div class="content-card">
-                                <div class="card-header">
-                                    <h3><i class="fas fa-star"></i> Top Selling Products</h3>
-                                </div>
-                                <div class="card-body">
-                                    <div class="top-products-list" id="topProductsList">
-                                        <!-- Top products will be loaded here -->
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Activity Log -->
-                            <div class="content-card large">
-                                <div class="card-header">
-                                    <h3><i class="fas fa-history"></i> Recent Activity</h3>
-                                </div>
-                                <div class="card-body">
-                                    <div class="activity-log" id="activityLog">
-                                        <!-- Activity log will be loaded here -->
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="table-responsive">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Customer</th>
+                                        <th>Date</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentOrdersTable">
+                                    <tr>
+                                        <td colspan="6" class="empty-state">
+                                            <i class="fas fa-shopping-cart"></i>
+                                            <p>No orders found</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </section>
-
-                <!-- Products Management Section -->
-                <section id="productsSection" class="content-section">
-                    <div class="section-header">
-                        <h2><i class="fas fa-box"></i> Products Management</h2>
-                        <div class="section-actions">
-                            <button class="btn-primary" id="addProductBtn">
-                                <i class="fas fa-plus"></i> Add New Product
-                            </button>
-                            <div class="search-box">
-                                <input type="text" id="productSearch" placeholder="Search products...">
-                                <button id="productSearchBtn"><i class="fas fa-search"></i></button>
+                
+                <!-- Products Section -->
+                <section class="dashboard-section" id="productsSection" style="display: none;">
+                    <div class="table-card">
+                        <div class="table-header">
+                            <h3>Product Management</h3>
+                            <div>
+                                <input type="text" id="productSearch" class="form-control" placeholder="Search products..." style="width: 200px;">
+                                <button class="btn btn-primary" onclick="showAddProductModal()">
+                                    <i class="fas fa-plus"></i> Add New Product
+                                </button>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Products Table -->
-                    <div class="content-card">
-                        <div class="card-header">
-                            <h3>All Products</h3>
-                            <div class="table-controls">
-                                <select id="productCategoryFilter">
-                                    <option value="all">All Categories</option>
-                                    <option value="electronics">Electronics</option>
-                                    <option value="health-beauty">Health & Beauty</option>
-                                    <option value="fashion">Fashion</option>
-                                    <option value="sex-toy">Sex Toy</option>
-                                    <option value="others">Others</option>
-                                </select>
-                                <select id="productSort">
-                                    <option value="newest">Newest First</option>
-                                    <option value="oldest">Oldest First</option>
-                                    <option value="price-high">Price: High to Low</option>
-                                    <option value="price-low">Price: Low to High</option>
-                                    <option value="name">Name A-Z</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="data-table">
-                                    <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Image</th>
-                                            <th>Product Name</th>
-                                            <th>Category</th>
-                                            <th>Price</th>
-                                            <th>Stock</th>
-                                            <th>Status</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="productsTable">
-                                        <!-- Products will be loaded here -->
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="table-footer">
-                                <div class="pagination" id="productsPagination">
-                                    <!-- Pagination will be loaded here -->
-                                </div>
-                            </div>
+                        <div class="table-responsive">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Image</th>
+                                        <th>Name</th>
+                                        <th>Category</th>
+                                        <th>Price</th>
+                                        <th>Stock</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productsTable">
+                                    <tr>
+                                        <td colspan="8" class="empty-state">
+                                            <i class="fas fa-box-open"></i>
+                                            <p>No products found</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </section>
-
-                <!-- Orders Management Section -->
-                <section id="ordersSection" class="content-section">
-                    <div class="section-header">
-                        <h2><i class="fas fa-shopping-cart"></i> Orders Management</h2>
-                        <div class="section-actions">
-                            <button class="btn-export" id="exportOrdersBtn">
-                                <i class="fas fa-download"></i> Export Orders
-                            </button>
-                            <div class="date-filter">
-                                <input type="date" id="orderDateFrom">
-                                <span>to</span>
-                                <input type="date" id="orderDateTo">
-                                <button id="filterOrdersBtn">Filter</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Orders Stats -->
-                    <div class="orders-stats">
-                        <div class="order-stat-card">
-                            <div class="order-stat pending">
-                                <h3 id="pendingOrders">0</h3>
-                                <p>Pending</p>
-                            </div>
-                        </div>
-                        <div class="order-stat-card">
-                            <div class="order-stat processing">
-                                <h3 id="processingOrders">0</h3>
-                                <p>Processing</p>
-                            </div>
-                        </div>
-                        <div class="order-stat-card">
-                            <div class="order-stat shipped">
-                                <h3 id="shippedOrders">0</h3>
-                                <p>Shipped</p>
-                            </div>
-                        </div>
-                        <div class="order-stat-card">
-                            <div class="order-stat delivered">
-                                <h3 id="deliveredOrders">0</h3>
-                                <p>Delivered</p>
-                            </div>
-                        </div>
-                        <div class="order-stat-card">
-                            <div class="order-stat cancelled">
-                                <h3 id="cancelledOrders">0</h3>
-                                <p>Cancelled</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Orders Table -->
-                    <div class="content-card">
-                        <div class="card-header">
-                            <h3>All Orders</h3>
-                            <div class="table-controls">
-                                <select id="orderStatusFilter">
-                                    <option value="all">All Status</option>
+                
+                <!-- Orders Section -->
+                <section class="dashboard-section" id="ordersSection" style="display: none;">
+                    <div class="table-card">
+                        <div class="table-header">
+                            <h3>Order Management</h3>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <select id="orderFilter" class="form-control" style="width: 150px;">
+                                    <option value="all">All Orders</option>
                                     <option value="pending">Pending</option>
                                     <option value="processing">Processing</option>
                                     <option value="shipped">Shipped</option>
-                                    <option value="delivered">Delivered</option>
+                                    <option value="completed">Completed</option>
                                     <option value="cancelled">Cancelled</option>
                                 </select>
+                                <input type="text" id="orderDateFilter" class="form-control" placeholder="Select date" style="width: 150px;">
+                                <input type="text" id="orderSearch" class="form-control" placeholder="Search orders..." style="width: 200px;">
+                                <button class="btn btn-primary" onclick="exportOrders()">
+                                    <i class="fas fa-file-export"></i> Export
+                                </button>
                             </div>
                         </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="data-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Order ID</th>
-                                            <th>Customer</th>
-                                            <th>Date</th>
-                                            <th>Amount</th>
-                                            <th>Status</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="ordersTable">
-                                        <!-- Orders will be loaded here -->
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="table-footer">
-                                <div class="pagination" id="ordersPagination">
-                                    <!-- Pagination will be loaded here -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Categories Management Section -->
-                <section id="categoriesSection" class="content-section">
-                    <div class="section-header">
-                        <h2><i class="fas fa-list"></i> Categories Management</h2>
-                        <button class="btn-primary" id="addCategoryBtn">
-                            <i class="fas fa-plus"></i> Add New Category
-                        </button>
-                    </div>
-
-                    <div class="content-row">
-                        <!-- Categories List -->
-                        <div class="content-card">
-                            <div class="card-header">
-                                <h3>All Categories</h3>
-                            </div>
-                            <div class="card-body">
-                                <div class="categories-list" id="categoriesList">
-                                    <!-- Categories will be loaded here -->
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Category Form -->
-                        <div class="content-card">
-                            <div class="card-header">
-                                <h3 id="categoryFormTitle">Add New Category</h3>
-                            </div>
-                            <div class="card-body">
-                                <form id="categoryForm">
-                                    <input type="hidden" id="categoryId">
-                                    <div class="form-group">
-                                        <label for="categoryName">Category Name</label>
-                                        <input type="text" id="categoryName" required placeholder="Enter category name">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="categorySlug">Category Slug</label>
-                                        <input type="text" id="categorySlug" required placeholder="e.g., electronics">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="categoryDescription">Description</label>
-                                        <textarea id="categoryDescription" rows="3" placeholder="Enter category description"></textarea>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="categoryImage">Category Image URL</label>
-                                        <input type="text" id="categoryImage" placeholder="Enter image URL">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="categoryStatus">Status</label>
-                                        <select id="categoryStatus">
-                                            <option value="active">Active</option>
-                                            <option value="inactive">Inactive</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-actions">
-                                        <button type="submit" class="btn-primary" id="saveCategoryBtn">
-                                            Save Category
-                                        </button>
-                                        <button type="button" class="btn-secondary" id="cancelCategoryBtn">
-                                            Cancel
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
+                        <div class="table-responsive">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Customer</th>
+                                        <th>Date</th>
+                                        <th>Items</th>
+                                        <th>Total</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ordersTable">
+                                    <tr>
+                                        <td colspan="7" class="empty-state">
+                                            <i class="fas fa-shopping-cart"></i>
+                                            <p>No orders found</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </section>
-
-                <!-- Users Management Section -->
-                <section id="usersSection" class="content-section">
-                    <div class="section-header">
-                        <h2><i class="fas fa-users"></i> Users Management</h2>
-                        <div class="section-actions">
-                            <button class="btn-primary" id="addUserBtn">
-                                <i class="fas fa-user-plus"></i> Add New User
-                            </button>
-                            <div class="search-box">
-                                <input type="text" id="userSearch" placeholder="Search users...">
-                                <button id="userSearchBtn"><i class="fas fa-search"></i></button>
+                
+                <!-- Users Section -->
+                <section class="dashboard-section" id="usersSection" style="display: none;">
+                    <div class="table-card">
+                        <div class="table-header">
+                            <h3>User Management</h3>
+                            <div>
+                                <input type="text" id="userSearch" class="form-control" placeholder="Search users..." style="width: 200px;">
+                                <button class="btn btn-primary" onclick="showAddUserModal()">
+                                    <i class="fas fa-user-plus"></i> Add User
+                                </button>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Users Table -->
-                    <div class="content-card">
-                        <div class="card-header">
-                            <h3>Registered Users</h3>
-                            <div class="table-controls">
-                                <select id="userRoleFilter">
-                                    <option value="all">All Roles</option>
-                                    <option value="customer">Customer</option>
-                                    <option value="admin">Admin</option>
-                                </select>
-                                <select id="userStatusFilter">
-                                    <option value="all">All Status</option>
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="data-table">
-                                    <thead>
-                                        <tr>
-                                            <th>User ID</th>
-                                            <th>Name</th>
-                                            <th>Email</th>
-                                            <th>Phone</th>
-                                            <th>Role</th>
-                                            <th>Status</th>
-                                            <th>Joined</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="usersTable">
-                                        <!-- Users will be loaded here -->
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="table-footer">
-                                <div class="pagination" id="usersPagination">
-                                    <!-- Pagination will be loaded here -->
-                                </div>
-                            </div>
+                        <div class="table-responsive">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Orders</th>
+                                        <th>Joined</th>
+                                        <th>Role</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTable">
+                                    <tr>
+                                        <td colspan="8" class="empty-state">
+                                            <i class="fas fa-users"></i>
+                                            <p>No users found</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </section>
-
+                
+                <!-- Categories Section -->
+                <section class="dashboard-section" id="categoriesSection" style="display: none;">
+                    <div class="table-card">
+                        <div class="table-header">
+                            <h3>Category Management</h3>
+                            <div>
+                                <button class="btn btn-primary" onclick="showAddCategoryModal()">
+                                    <i class="fas fa-plus"></i> Add Category
+                                </button>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                        <th>Slug</th>
+                                        <th>Products</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="categoriesTable">
+                                    <tr>
+                                        <td colspan="6" class="empty-state">
+                                            <i class="fas fa-tags"></i>
+                                            <p>No categories found</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                
                 <!-- Analytics Section -->
-                <section id="analyticsSection" class="content-section">
-                    <div class="section-header">
-                        <h2><i class="fas fa-chart-line"></i> Analytics & Reports</h2>
-                        <div class="section-actions">
-                            <select id="analyticsPeriod">
-                                <option value="7">Last 7 Days</option>
-                                <option value="30" selected>Last 30 Days</option>
-                                <option value="90">Last 90 Days</option>
-                                <option value="365">Last Year</option>
-                            </select>
-                            <button class="btn-export" id="exportReportBtn">
-                                <i class="fas fa-download"></i> Export Report
-                            </button>
+                <section class="dashboard-section" id="analyticsSection" style="display: none;">
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>Monthly Revenue</h3>
+                                <select id="analyticsYear" class="form-control" style="width: 120px;">
+                                    <option>2023</option>
+                                    <option>2024</option>
+                                    <option>2025</option>
+                                </select>
+                            </div>
+                            <canvas id="revenueChart" height="300"></canvas>
+                        </div>
+                        
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>User Growth</h3>
+                                <button class="btn btn-sm" onclick="refreshUserGrowthChart()">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                            <canvas id="userGrowthChart" height="300"></canvas>
                         </div>
                     </div>
-
-                    <div class="analytics-content">
-                        <div class="content-row">
-                            <!-- Sales Chart -->
-                            <div class="content-card large">
-                                <div class="card-header">
-                                    <h3>Sales Performance</h3>
-                                </div>
-                                <div class="card-body">
-                                    <canvas id="salesChart"></canvas>
-                                </div>
-                            </div>
-
-                            <!-- Traffic Sources -->
-                            <div class="content-card">
-                                <div class="card-header">
-                                    <h3>Traffic Sources</h3>
-                                </div>
-                                <div class="card-body">
-                                    <canvas id="trafficChart"></canvas>
-                                </div>
-                            </div>
+                    
+                    <div class="table-card">
+                        <div class="table-header">
+                            <h3>Top Selling Products</h3>
+                            <button class="btn btn-secondary" onclick="loadTopProducts()">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
                         </div>
-
-                        <div class="content-row">
-                            <!-- Product Performance -->
-                            <div class="content-card">
-                                <div class="card-header">
-                                    <h3>Top Performing Products</h3>
-                                </div>
-                                <div class="card-body">
-                                    <div class="performance-list" id="productPerformance">
-                                        <!-- Product performance will be loaded here -->
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Customer Insights -->
-                            <div class="content-card large">
-                                <div class="card-header">
-                                    <h3>Customer Insights</h3>
-                                </div>
-                                <div class="card-body">
-                                    <div class="insights-grid">
-                                        <div class="insight-card">
-                                            <div class="insight-icon">
-                                                <i class="fas fa-user-plus"></i>
-                                            </div>
-                                            <div class="insight-info">
-                                                <h4 id="newCustomers">0</h4>
-                                                <p>New Customers</p>
-                                            </div>
-                                        </div>
-                                        <div class="insight-card">
-                                            <div class="insight-icon">
-                                                <i class="fas fa-shopping-bag"></i>
-                                            </div>
-                                            <div class="insight-info">
-                                                <h4 id="avgOrderValue">$0</h4>
-                                                <p>Avg. Order Value</p>
-                                            </div>
-                                        </div>
-                                        <div class="insight-card">
-                                            <div class="insight-icon">
-                                                <i class="fas fa-redo"></i>
-                                            </div>
-                                            <div class="insight-info">
-                                                <h4 id="repeatCustomers">0%</h4>
-                                                <p>Repeat Customers</p>
-                                            </div>
-                                        </div>
-                                        <div class="insight-card">
-                                            <div class="insight-icon">
-                                                <i class="fas fa-map-marker-alt"></i>
-                                            </div>
-                                            <div class="insight-info">
-                                                <h4 id="topLocation">N/A</h4>
-                                                <p>Top Location</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="table-responsive">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Category</th>
+                                        <th>Sold Units</th>
+                                        <th>Revenue</th>
+                                        <th>Rating</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="topProductsTable">
+                                    <tr>
+                                        <td colspan="5" class="empty-state">
+                                            <i class="fas fa-chart-bar"></i>
+                                            <p>No data available</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </section>
-
+                
                 <!-- Settings Section -->
-                <section id="settingsSection" class="content-section">
-                    <div class="section-header">
-                        <h2><i class="fas fa-cog"></i> System Settings</h2>
-                    </div>
-
-                    <div class="settings-tabs">
-                        <div class="settings-sidebar">
-                            <ul class="settings-menu">
-                                <li class="settings-item active" data-tab="general">
-                                    <i class="fas fa-cogs"></i> General Settings
-                                </li>
-                                <li class="settings-item" data-tab="payment">
-                                    <i class="fas fa-credit-card"></i> Payment Methods
-                                </li>
-                                <li class="settings-item" data-tab="shipping">
-                                    <i class="fas fa-truck"></i> Shipping Settings
-                                </li>
-                                <li class="settings-item" data-tab="email">
-                                    <i class="fas fa-envelope"></i> Email Settings
-                                </li>
-                                <li class="settings-item" data-tab="seo">
-                                    <i class="fas fa-search"></i> SEO Settings
-                                </li>
-                                <li class="settings-item" data-tab="security">
-                                    <i class="fas fa-shield-alt"></i> Security
-                                </li>
-                            </ul>
+                <section class="dashboard-section" id="settingsSection" style="display: none;">
+                    <div class="table-card">
+                        <div class="table-header">
+                            <h3>Store Settings</h3>
+                            <button class="btn btn-primary" onclick="saveSettings()">
+                                <i class="fas fa-save"></i> Save Settings
+                            </button>
                         </div>
-
-                        <div class="settings-content">
-                            <!-- General Settings -->
-                            <div class="settings-tab active" id="generalTab">
-                                <h3>General Store Settings</h3>
-                                <form id="generalSettingsForm">
-                                    <div class="form-group">
-                                        <label for="storeName">Store Name</label>
-                                        <input type="text" id="storeName" value="New Journey Shop" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="storeEmail">Store Email</label>
-                                        <input type="email" id="storeEmail" value="support@newjourneyshop.com" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="storePhone">Store Phone</label>
-                                        <input type="tel" id="storePhone" value="+1 234 567 8900">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="storeAddress">Store Address</label>
-                                        <textarea id="storeAddress" rows="3">123 Shopping Street, City, Country</textarea>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="storeCurrency">Currency</label>
-                                        <select id="storeCurrency">
-                                            <option value="USD" selected>US Dollar ($)</option>
-                                            <option value="EUR">Euro (€)</option>
-                                            <option value="GBP">British Pound (£)</option>
-                                            <option value="BDT">Bangladeshi Taka (৳)</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="storeTimezone">Timezone</label>
-                                        <select id="storeTimezone">
-                                            <option value="UTC-5">UTC-5 (Eastern Time)</option>
-                                            <option value="UTC+0" selected>UTC+0 (GMT)</option>
-                                            <option value="UTC+6">UTC+6 (Bangladesh Time)</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-actions">
-                                        <button type="submit" class="btn-primary">Save Settings</button>
-                                    </div>
-                                </form>
+                        <div class="settings-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Store Name</label>
+                                    <input type="text" id="storeName" class="form-control" value="New Journey Shop">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Store Email</label>
+                                    <input type="email" id="storeEmail" class="form-control" value="contact@newjourneyshop.com">
+                                </div>
                             </div>
-
-                            <!-- Payment Settings -->
-                            <div class="settings-tab" id="paymentTab">
-                                <h3>Payment Methods Settings</h3>
-                                <form id="paymentSettingsForm">
-                                    <div class="form-group checkbox-group">
-                                        <label>
-                                            <input type="checkbox" id="enableCreditCard" checked>
-                                            <span>Credit Card</span>
-                                        </label>
-                                    </div>
-                                    <div class="form-group checkbox-group">
-                                        <label>
-                                            <input type="checkbox" id="enablePaypal" checked>
-                                            <span>PayPal</span>
-                                        </label>
-                                    </div>
-                                    <div class="form-group checkbox-group">
-                                        <label>
-                                            <input type="checkbox" id="enableStripe">
-                                            <span>Stripe</span>
-                                        </label>
-                                    </div>
-                                    <div class="form-group checkbox-group">
-                                        <label>
-                                            <input type="checkbox" id="enableCashOnDelivery" checked>
-                                            <span>Cash on Delivery</span>
-                                        </label>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="paymentInstructions">Payment Instructions</label>
-                                        <textarea id="paymentInstructions" rows="3">Please complete your payment within 24 hours of placing the order.</textarea>
-                                    </div>
-                                    <div class="form-actions">
-                                        <button type="submit" class="btn-primary">Save Payment Settings</button>
-                                    </div>
-                                </form>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Store Phone</label>
+                                    <input type="tel" id="storePhone" class="form-control" value="+1 234 567 8900">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Shipping Cost ($)</label>
+                                    <input type="number" id="shippingCost" class="form-control" value="5.99" step="0.01">
+                                </div>
                             </div>
-
-                            <!-- Shipping Settings -->
-                            <div class="settings-tab" id="shippingTab">
-                                <h3>Shipping Settings</h3>
-                                <form id="shippingSettingsForm">
-                                    <div class="form-group">
-                                        <label for="shippingCost">Default Shipping Cost ($)</label>
-                                        <input type="number" id="shippingCost" value="5.99" step="0.01" min="0">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="freeShippingThreshold">Free Shipping Threshold ($)</label>
-                                        <input type="number" id="freeShippingThreshold" value="50.00" step="0.01" min="0">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="shippingCountries">Shipping Countries</label>
-                                        <select id="shippingCountries" multiple>
-                                            <option value="US" selected>United States</option>
-                                            <option value="UK" selected>United Kingdom</option>
-                                            <option value="CA" selected>Canada</option>
-                                            <option value="AU">Australia</option>
-                                            <option value="BD" selected>Bangladesh</option>
-                                        </select>
-                                        <small>Hold Ctrl/Cmd to select multiple countries</small>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="estimatedDelivery">Estimated Delivery (Days)</label>
-                                        <input type="number" id="estimatedDelivery" value="7" min="1" max="30">
-                                    </div>
-                                    <div class="form-actions">
-                                        <button type="submit" class="btn-primary">Save Shipping Settings</button>
-                                    </div>
-                                </form>
+                            
+                            <div class="form-group">
+                                <label>Store Address</label>
+                                <textarea id="storeAddress" class="form-control" rows="3">123 Shopping Street, City, Country</textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Store Description</label>
+                                <textarea id="storeDescription" class="form-control" rows="3">Your favorite online shopping destination for quality products at great prices.</textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Admin Notification Email</label>
+                                <input type="email" id="adminNotifyEmail" class="form-control" value="admin@newjourneyshop.com">
                             </div>
                         </div>
                     </div>
                 </section>
             </div>
-        </main>
+        </div>
     </div>
-
-    <!-- Product Modal -->
-    <div id="productModal" class="modal">
-        <div class="modal-content product-modal-content">
+    
+    <!-- Add Product Modal -->
+    <div class="modal" id="addProductModal">
+        <div class="modal-content">
             <div class="modal-header">
-                <h3 id="productModalTitle">Add New Product</h3>
+                <h3>Add New Product</h3>
                 <button class="close-modal">&times;</button>
             </div>
             <div class="modal-body">
-                <form id="productForm">
-                    <input type="hidden" id="productId">
+                <form id="addProductForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Product Name *</label>
+                            <input type="text" id="productName" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>SKU</label>
+                            <input type="text" id="productSKU" class="form-control" placeholder="Auto-generated">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Description *</label>
+                        <textarea id="productDescription" class="form-control" rows="3" required></textarea>
+                    </div>
                     
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="productName">Product Name *</label>
-                            <input type="text" id="productName" required placeholder="Enter product name">
+                            <label>Price ($) *</label>
+                            <input type="number" id="productPrice" class="form-control" step="0.01" required>
                         </div>
+                        
                         <div class="form-group">
-                            <label for="productCategory">Category *</label>
-                            <select id="productCategory" required>
+                            <label>Compare at Price ($)</label>
+                            <input type="number" id="productComparePrice" class="form-control" step="0.01">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Category *</label>
+                            <select id="productCategory" class="form-control" required>
                                 <option value="">Select Category</option>
                                 <option value="electronics">Electronics</option>
                                 <option value="health-beauty">Health & Beauty</option>
@@ -856,113 +1542,1766 @@
                                 <option value="others">Others</option>
                             </select>
                         </div>
+                        
+                        <div class="form-group">
+                            <label>Stock Quantity *</label>
+                            <input type="number" id="productStock" class="form-control" required>
+                        </div>
                     </div>
-
+                    
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="productPrice">Price ($) *</label>
-                            <input type="number" id="productPrice" required step="0.01" min="0" placeholder="0.00">
+                            <label>Weight (kg)</label>
+                            <input type="number" id="productWeight" class="form-control" step="0.01">
                         </div>
+                        
                         <div class="form-group">
-                            <label for="productOriginalPrice">Original Price ($)</label>
-                            <input type="number" id="productOriginalPrice" step="0.01" min="0" placeholder="0.00">
-                        </div>
-                        <div class="form-group">
-                            <label for="productStock">Stock Quantity *</label>
-                            <input type="number" id="productStock" required min="0" placeholder="0">
+                            <label>Dimensions (cm)</label>
+                            <input type="text" id="productDimensions" class="form-control" placeholder="L x W x H">
                         </div>
                     </div>
-
+                    
                     <div class="form-group">
-                        <label for="productDescription">Description *</label>
-                        <textarea id="productDescription" rows="4" required placeholder="Enter product description"></textarea>
+                        <label>Product Images (URLs, one per line)</label>
+                        <textarea id="productImages" class="form-control" rows="3" placeholder="https://example.com/image1.jpg"></textarea>
+                        <small class="text-muted">Enter one image URL per line. First image will be the main product image.</small>
                     </div>
-
+                    
                     <div class="form-group">
-                        <label for="productImages">Product Images (URLs, one per line)</label>
-                        <textarea id="productImages" rows="3" placeholder="https://example.com/image1.jpg
-https://example.com/image2.jpg"></textarea>
+                        <label>Affiliate Link</label>
+                        <input type="url" id="productAffiliateLink" class="form-control" placeholder="https://www.amazon.com/dp/...">
                     </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="productAffiliateLink">Affiliate Link</label>
-                            <input type="url" id="productAffiliateLink" placeholder="https://example.com/product">
-                        </div>
-                        <div class="form-group">
-                            <label for="productStatus">Status</label>
-                            <select id="productStatus">
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                                <option value="out_of_stock">Out of Stock</option>
-                            </select>
-                        </div>
+                    
+                    <div class="form-group">
+                        <label>Tags (comma separated)</label>
+                        <input type="text" id="productTags" class="form-control" placeholder="tag1, tag2, tag3">
                     </div>
-
-                    <div class="form-actions">
-                        <button type="submit" class="btn-primary">Save Product</button>
-                        <button type="button" class="btn-secondary close-modal">Cancel</button>
+                    
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input type="checkbox" id="productFeatured" class="form-check-input">
+                            <label class="form-check-label" for="productFeatured">Feature this product</label>
+                        </div>
+                        
+                        <div class="form-check">
+                            <input type="checkbox" id="productActive" class="form-check-input" checked>
+                            <label class="form-check-label" for="productActive">Product is active</label>
+                        </div>
                     </div>
                 </form>
             </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary close-modal">Cancel</button>
+                <button class="btn btn-primary" onclick="saveProduct()">
+                    <span id="saveProductText">Save Product</span>
+                    <span id="saveProductLoading" class="loading-spinner" style="display: none;"></span>
+                </button>
+            </div>
         </div>
     </div>
-
+    
+    <!-- Edit Product Modal -->
+    <div class="modal" id="editProductModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Product</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body" id="editProductContent">
+                <!-- Edit form will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary close-modal">Cancel</button>
+                <button class="btn btn-primary" onclick="updateProduct()">Update Product</button>
+            </div>
+        </div>
+    </div>
+    
     <!-- Order Details Modal -->
-    <div id="orderDetailsModal" class="modal">
-        <div class="modal-content order-details-modal">
+    <div class="modal" id="orderDetailsModal">
+        <div class="modal-content">
             <div class="modal-header">
-                <h3 id="orderDetailsTitle">Order Details</h3>
+                <h3>Order Details</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body" id="orderDetailsContent">
+                <!-- Order details will be loaded here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add User Modal -->
+    <div class="modal" id="addUserModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New User</h3>
                 <button class="close-modal">&times;</button>
             </div>
             <div class="modal-body">
-                <div id="orderDetailsContent">
-                    <!-- Order details will be loaded here -->
-                </div>
+                <form id="addUserForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Full Name *</label>
+                            <input type="text" id="userName" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Email *</label>
+                            <input type="email" id="userEmail" class="form-control" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Password *</label>
+                            <input type="password" id="userPassword" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Confirm Password *</label>
+                            <input type="password" id="userConfirmPassword" class="form-control" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="tel" id="userPhone" class="form-control">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Role *</label>
+                            <select id="userRole" class="form-control" required>
+                                <option value="admin">Admin</option>
+                                <option value="editor">Editor</option>
+                                <option value="viewer">Viewer</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Address</label>
+                        <textarea id="userAddress" class="form-control" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary close-modal">Cancel</button>
+                <button class="btn btn-primary" onclick="saveUser()">Save User</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Category Modal -->
+    <div class="modal" id="addCategoryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Category</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addCategoryForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Category Name *</label>
+                            <input type="text" id="categoryName" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Slug *</label>
+                            <input type="text" id="categorySlug" class="form-control" required>
+                            <small class="text-muted">URL-friendly version of the name (e.g., "electronics")</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="categoryDescription" class="form-control" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Parent Category</label>
+                        <select id="categoryParent" class="form-control">
+                            <option value="">None (Main Category)</option>
+                            <option value="electronics">Electronics</option>
+                            <option value="health-beauty">Health & Beauty</option>
+                            <option value="fashion">Fashion</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Category Image URL</label>
+                        <input type="url" id="categoryImage" class="form-control" placeholder="https://example.com/category-image.jpg">
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input type="checkbox" id="categoryActive" class="form-check-input" checked>
+                            <label class="form-check-label" for="categoryActive">Category is active</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary close-modal">Cancel</button>
+                <button class="btn btn-primary" onclick="saveCategory()">Save Category</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Confirmation Modal -->
+    <div class="modal" id="confirmationModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>Confirm Action</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmationMessage">Are you sure you want to perform this action?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary close-modal">Cancel</button>
+                <button class="btn btn-danger" id="confirmActionBtn">Confirm</button>
             </div>
         </div>
     </div>
 
-    <!-- Quick Add Modal -->
-    <div id="quickAddModal" class="modal">
-        <div class="modal-content quick-add-modal">
-            <div class="modal-header">
-                <h3>Quick Add</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="quick-add-options">
-                    <button class="quick-add-option" data-type="product">
-                        <i class="fas fa-box"></i>
-                        <span>Add Product</span>
-                    </button>
-                    <button class="quick-add-option" data-type="category">
-                        <i class="fas fa-list"></i>
-                        <span>Add Category</span>
-                    </button>
-                    <button class="quick-add-option" data-type="user">
-                        <i class="fas fa-user-plus"></i>
-                        <span>Add User</span>
-                    </button>
-                    <button class="quick-add-option" data-type="order">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span>Add Order</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Firebase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <!-- App JavaScript -->
-    <script src="firebase-config.js"></script>
-    <script src="admin-app.js"></script>
+    <script>
+        // Admin Configuration
+        const ADMIN_CONFIG = {
+            email: "learneralom@gmail.com",
+            password: "Salom1234",
+            name: "Admin User"
+        };
+        
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAKl1XvPPt9iEtcRYlhbUbZk7B8fmDgroo",
+            authDomain: "new-journey-shop.firebaseapp.com",
+            databaseURL: "https://new-journey-shop-default-rtdb.firebaseio.com",
+            projectId: "new-journey-shop",
+            storageBucket: "new-journey-shop.firebasestorage.app",
+            messagingSenderId: "488236854608",
+            appId: "1:488236854608:web:756df2f4e743a283ec5055",
+            measurementId: "G-KHW4PKN2XE"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        // Chart instances
+        let salesChart, categoryChart, revenueChart, userGrowthChart;
+        
+        // Current state
+        let currentState = {
+            admin: null,
+            currentSection: 'dashboard',
+            currentProductId: null,
+            currentOrderId: null,
+            currentUserId: null,
+            currentCategoryId: null,
+            notifications: [],
+            products: [],
+            orders: [],
+            users: [],
+            categories: []
+        };
+        
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            initEventListeners();
+            initDatePicker();
+            
+            // Check if user is already logged in
+            if (localStorage.getItem('adminLoggedIn') === 'true') {
+                showDashboard();
+            }
+        });
+        
+        // Check authentication
+        function checkAuth() {
+            const adminLoggedIn = localStorage.getItem('adminLoggedIn');
+            const adminEmail = localStorage.getItem('adminEmail');
+            
+            if (adminLoggedIn === 'true' && adminEmail) {
+                currentState.admin = {
+                    email: adminEmail,
+                    name: adminEmail.split('@')[0]
+                };
+            }
+        }
+        
+        // Show login page
+        function showLogin() {
+            document.getElementById('loginPage').style.display = 'flex';
+            document.getElementById('dashboardPage').style.display = 'none';
+        }
+        
+        // Show dashboard
+        function showDashboard() {
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('dashboardPage').style.display = 'flex';
+            
+            // Update admin info
+            document.getElementById('adminName').textContent = currentState.admin.name;
+            document.getElementById('currentUserName').textContent = currentState.admin.name;
+            
+            // Load initial data
+            loadDashboardData();
+            loadNotifications();
+            initCharts();
+        }
+        
+        // Initialize event listeners
+        function initEventListeners() {
+            // Login form
+            document.getElementById('loginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                handleLogin();
+            });
+            
+            // Menu toggle
+            document.getElementById('menuToggle').addEventListener('click', function() {
+                document.getElementById('sidebar').classList.toggle('active');
+            });
+            
+            // Menu items
+            document.querySelectorAll('.menu-item').forEach(item => {
+                if (!item.classList.contains('logout-item')) {
+                    item.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const section = this.dataset.section;
+                        showSection(section);
+                    });
+                }
+            });
+            
+            // Logout
+            document.getElementById('logoutBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                handleLogout();
+            });
+            
+            // Notification button
+            document.getElementById('notificationBtn').addEventListener('click', function(e) {
+                e.stopPropagation();
+                const panel = document.getElementById('notificationPanel');
+                panel.classList.toggle('active');
+            });
+            
+            // Close notification panel when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.notification-wrapper')) {
+                    document.getElementById('notificationPanel').classList.remove('active');
+                }
+            });
+            
+            // Close modals
+            document.querySelectorAll('.close-modal').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    this.closest('.modal').classList.remove('active');
+                });
+            });
+            
+            // Close modals when clicking outside
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        this.classList.remove('active');
+                    }
+                });
+            });
+            
+            // Product search
+            document.getElementById('productSearch')?.addEventListener('input', function() {
+                searchProducts(this.value);
+            });
+            
+            // Order search
+            document.getElementById('orderSearch')?.addEventListener('input', function() {
+                searchOrders(this.value);
+            });
+            
+            // User search
+            document.getElementById('userSearch')?.addEventListener('input', function() {
+                searchUsers(this.value);
+            });
+            
+            // Order filter
+            document.getElementById('orderFilter')?.addEventListener('change', function() {
+                loadOrders();
+            });
+            
+            // Sales period change
+            document.getElementById('salesPeriod')?.addEventListener('change', function() {
+                updateSalesChart();
+            });
+            
+            // Analytics year change
+            document.getElementById('analyticsYear')?.addEventListener('change', function() {
+                updateRevenueChart();
+            });
+        }
+        
+        // Initialize date picker
+        function initDatePicker() {
+            flatpickr("#orderDateFilter", {
+                dateFormat: "Y-m-d",
+                onChange: function(selectedDates, dateStr) {
+                    loadOrders();
+                }
+            });
+        }
+        
+        // Handle login
+        function handleLogin() {
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            const errorDiv = document.getElementById('loginError');
+            
+            // Simple validation (in real app, use Firebase Authentication)
+            if (email === ADMIN_CONFIG.email && password === ADMIN_CONFIG.password) {
+                // Store admin session
+                localStorage.setItem('adminLoggedIn', 'true');
+                localStorage.setItem('adminEmail', email);
+                
+                currentState.admin = {
+                    email: email,
+                    name: email.split('@')[0]
+                };
+                
+                showDashboard();
+            } else {
+                errorDiv.style.display = 'block';
+                setTimeout(() => {
+                    errorDiv.style.display = 'none';
+                }, 3000);
+            }
+        }
+        
+        // Handle logout
+        function handleLogout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('adminLoggedIn');
+                localStorage.removeItem('adminEmail');
+                currentState.admin = null;
+                showLogin();
+            }
+        }
+        
+        // Show section
+        function showSection(section) {
+            // Update menu active state
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.section === section) {
+                    item.classList.add('active');
+                }
+            });
+            
+            // Hide all sections
+            document.querySelectorAll('.dashboard-section').forEach(sec => {
+                sec.style.display = 'none';
+            });
+            
+            // Show selected section
+            document.getElementById(section + 'Section').style.display = 'block';
+            
+            // Update page title
+            const title = section.charAt(0).toUpperCase() + section.slice(1);
+            document.querySelector('.page-title h1').textContent = title;
+            
+            // Load section data
+            switch(section) {
+                case 'dashboard':
+                    loadDashboardData();
+                    break;
+                case 'products':
+                    loadProducts();
+                    break;
+                case 'orders':
+                    loadOrders();
+                    break;
+                case 'users':
+                    loadUsers();
+                    break;
+                case 'categories':
+                    loadCategories();
+                    break;
+                case 'analytics':
+                    loadAnalytics();
+                    break;
+                case 'settings':
+                    loadSettings();
+                    break;
+            }
+            
+            // Close sidebar on mobile
+            if (window.innerWidth < 992) {
+                document.getElementById('sidebar').classList.remove('active');
+            }
+        }
+        
+        // Load dashboard data
+        function loadDashboardData() {
+            // Load stats from Firebase
+            database.ref('orders').once('value').then(snapshot => {
+                const orders = snapshot.val();
+                const orderCount = orders ? Object.keys(orders).length : 0;
+                document.getElementById('totalOrders').textContent = orderCount;
+                
+                // Calculate total revenue
+                let totalRevenue = 0;
+                if (orders) {
+                    Object.values(orders).forEach(order => {
+                        totalRevenue += order.total || 0;
+                    });
+                }
+                document.getElementById('totalRevenue').textContent = '$' + totalRevenue.toFixed(2);
+                
+                // Update recent orders
+                updateRecentOrders(orders);
+            });
+            
+            // Load users count
+            // Note: In a real app, you would have a users node in Firebase
+            document.getElementById('totalUsers').textContent = '154';
+            
+            // Load products count
+            document.getElementById('totalProducts').textContent = '24';
+        }
+        
+        // Update recent orders
+        function updateRecentOrders(orders) {
+            const tableBody = document.getElementById('recentOrdersTable');
+            
+            if (!orders || Object.keys(orders).length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <i class="fas fa-shopping-cart"></i>
+                            <p>No orders found</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            let html = '';
+            const recentOrders = Object.entries(orders)
+                .sort((a, b) => new Date(b[1].createdAt) - new Date(a[1].createdAt))
+                .slice(0, 5);
+            
+            recentOrders.forEach(([orderId, order]) => {
+                const itemCount = order.products?.length || 0;
+                const statusClass = getStatusClass(order.status || 'pending');
+                
+                html += `
+                    <tr>
+                        <td><strong>#${orderId.substring(0, 8)}</strong></td>
+                        <td>${order.userName || 'Guest'}</td>
+                        <td>${new Date(order.createdAt).toLocaleDateString()}</td>
+                        <td>$${order.total?.toFixed(2) || '0.00'}</td>
+                        <td><span class="status-badge ${statusClass}">${order.status || 'pending'}</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-icon btn-view" onclick="viewOrder('${orderId}')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn-icon btn-edit" onclick="updateOrderStatusPrompt('${orderId}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableBody.innerHTML = html;
+        }
+        
+        // Load products
+        function loadProducts() {
+            // In a real app, load from Firebase
+            // For now, use sample data
+            const sampleProducts = [
+                {
+                    id: 1,
+                    name: "Wireless Bluetooth Headphones",
+                    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+                    category: "electronics",
+                    price: 79.99,
+                    stock: 45,
+                    status: "active"
+                },
+                {
+                    id: 2,
+                    name: "Smart Fitness Watch",
+                    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+                    category: "electronics",
+                    price: 149.99,
+                    stock: 32,
+                    status: "active"
+                },
+                {
+                    id: 3,
+                    name: "Organic Face Cream",
+                    image: "https://images.unsplash.com/photo-1556228578-9c360e1d8d34?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+                    category: "health-beauty",
+                    price: 29.99,
+                    stock: 78,
+                    status: "active"
+                },
+                {
+                    id: 4,
+                    name: "Men's Casual Shirt",
+                    image: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+                    category: "fashion",
+                    price: 34.99,
+                    stock: 63,
+                    status: "active"
+                },
+                {
+                    id: 5,
+                    name: "Premium Massage Oil",
+                    image: "https://images.unsplash.com/photo-1601066525718-7bd8c2e1e9d9?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
+                    category: "sex-toy",
+                    price: 24.99,
+                    stock: 41,
+                    status: "active"
+                }
+            ];
+            
+            currentState.products = sampleProducts;
+            renderProducts(sampleProducts);
+        }
+        
+        // Render products
+        function renderProducts(products) {
+            const tableBody = document.getElementById('productsTable');
+            
+            if (products.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="empty-state">
+                            <i class="fas fa-box-open"></i>
+                            <p>No products found</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            let html = '';
+            products.forEach(product => {
+                const statusClass = product.stock > 0 ? 'status-active' : 'status-inactive';
+                const statusText = product.stock > 0 ? 'In Stock' : 'Out of Stock';
+                
+                html += `
+                    <tr>
+                        <td>${product.id}</td>
+                        <td>
+                            <img src="${product.image}" alt="${product.name}" class="product-image-small">
+                        </td>
+                        <td>${product.name}</td>
+                        <td>${product.category}</td>
+                        <td>$${product.price.toFixed(2)}</td>
+                        <td>${product.stock}</td>
+                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-icon btn-view" onclick="viewProduct(${product.id})">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn-icon btn-edit" onclick="editProduct(${product.id})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-icon btn-delete" onclick="deleteProductPrompt(${product.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableBody.innerHTML = html;
+        }
+        
+        // Search products
+        function searchProducts(query) {
+            const filtered = currentState.products.filter(product => 
+                product.name.toLowerCase().includes(query.toLowerCase()) ||
+                product.category.toLowerCase().includes(query.toLowerCase())
+            );
+            renderProducts(filtered);
+        }
+        
+        // Load orders
+        function loadOrders() {
+            database.ref('orders').once('value').then(snapshot => {
+                const orders = snapshot.val();
+                currentState.orders = orders || {};
+                renderOrders(orders);
+            });
+        }
+        
+        // Render orders
+        function renderOrders(orders) {
+            const tableBody = document.getElementById('ordersTable');
+            const statusFilter = document.getElementById('orderFilter')?.value || 'all';
+            const dateFilter = document.getElementById('orderDateFilter')?.value;
+            const searchQuery = document.getElementById('orderSearch')?.value || '';
+            
+            if (!orders || Object.keys(orders).length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            <i class="fas fa-shopping-cart"></i>
+                            <p>No orders found</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            let filteredOrders = Object.entries(orders);
+            
+            // Apply filters
+            if (statusFilter !== 'all') {
+                filteredOrders = filteredOrders.filter(([id, order]) => order.status === statusFilter);
+            }
+            
+            if (dateFilter) {
+                filteredOrders = filteredOrders.filter(([id, order]) => {
+                    const orderDate = new Date(order.createdAt).toISOString().split('T')[0];
+                    return orderDate === dateFilter;
+                });
+            }
+            
+            if (searchQuery) {
+                filteredOrders = filteredOrders.filter(([id, order]) => 
+                    order.userName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    order.userEmail?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    id.toLowerCase().includes(searchQuery.toLowerCase())
+                );
+            }
+            
+            // Sort by date (newest first)
+            filteredOrders.sort((a, b) => new Date(b[1].createdAt) - new Date(a[1].createdAt));
+            
+            if (filteredOrders.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            <i class="fas fa-shopping-cart"></i>
+                            <p>No orders match your filters</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            let html = '';
+            filteredOrders.forEach(([orderId, order]) => {
+                const itemCount = order.products?.length || 0;
+                const statusClass = getStatusClass(order.status || 'pending');
+                
+                html += `
+                    <tr>
+                        <td><strong>#${orderId.substring(0, 8)}</strong></td>
+                        <td>${order.userName || 'Guest'}</td>
+                        <td>${new Date(order.createdAt).toLocaleDateString()}</td>
+                        <td>${itemCount} item${itemCount !== 1 ? 's' : ''}</td>
+                        <td>$${order.total?.toFixed(2) || '0.00'}</td>
+                        <td><span class="status-badge ${statusClass}">${order.status || 'pending'}</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-icon btn-view" onclick="viewOrder('${orderId}')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn-icon btn-edit" onclick="updateOrderStatusPrompt('${orderId}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-icon btn-delete" onclick="deleteOrderPrompt('${orderId}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableBody.innerHTML = html;
+        }
+        
+        // Search orders
+        function searchOrders(query) {
+            renderOrders(currentState.orders);
+        }
+        
+        // Load users
+        function loadUsers() {
+            // Sample users data
+            const sampleUsers = [
+                {
+                    id: 1,
+                    name: "John Doe",
+                    email: "john@example.com",
+                    phone: "+1 234 567 8901",
+                    orders: 5,
+                    joined: "2023-01-15",
+                    role: "customer"
+                },
+                {
+                    id: 2,
+                    name: "Jane Smith",
+                    email: "jane@example.com",
+                    phone: "+1 234 567 8902",
+                    orders: 12,
+                    joined: "2023-02-20",
+                    role: "customer"
+                },
+                {
+                    id: 3,
+                    name: "Admin User",
+                    email: "admin@newjourneyshop.com",
+                    phone: "+1 234 567 8900",
+                    orders: 0,
+                    joined: "2023-01-01",
+                    role: "admin"
+                },
+                {
+                    id: 4,
+                    name: "Alice Brown",
+                    email: "alice@example.com",
+                    phone: "+1 234 567 8904",
+                    orders: 8,
+                    joined: "2023-04-05",
+                    role: "customer"
+                }
+            ];
+            
+            currentState.users = sampleUsers;
+            renderUsers(sampleUsers);
+        }
+        
+        // Render users
+        function renderUsers(users) {
+            const tableBody = document.getElementById('usersTable');
+            
+            if (users.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="empty-state">
+                            <i class="fas fa-users"></i>
+                            <p>No users found</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            let html = '';
+            users.forEach(user => {
+                const roleClass = user.role === 'admin' ? 'status-active' : 'status-inactive';
+                
+                html += `
+                    <tr>
+                        <td>${user.id}</td>
+                        <td>${user.name}</td>
+                        <td>${user.email}</td>
+                        <td>${user.phone}</td>
+                        <td>${user.orders}</td>
+                        <td>${user.joined}</td>
+                        <td><span class="status-badge ${roleClass}">${user.role}</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-icon btn-view" onclick="viewUser(${user.id})">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn-icon btn-edit" onclick="editUser(${user.id})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-icon btn-delete" onclick="deleteUserPrompt(${user.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableBody.innerHTML = html;
+        }
+        
+        // Search users
+        function searchUsers(query) {
+            const filtered = currentState.users.filter(user => 
+                user.name.toLowerCase().includes(query.toLowerCase()) ||
+                user.email.toLowerCase().includes(query.toLowerCase()) ||
+                user.role.toLowerCase().includes(query.toLowerCase())
+            );
+            renderUsers(filtered);
+        }
+        
+        // Load categories
+        function loadCategories() {
+            const categories = [
+                { id: 1, name: "Electronics", slug: "electronics", products: 8, status: "active" },
+                { id: 2, name: "Health & Beauty", slug: "health-beauty", products: 6, status: "active" },
+                { id: 3, name: "Fashion", slug: "fashion", products: 5, status: "active" },
+                { id: 4, name: "Sex Toy", slug: "sex-toy", products: 3, status: "active" },
+                { id: 5, name: "Others", slug: "others", products: 2, status: "active" }
+            ];
+            
+            currentState.categories = categories;
+            renderCategories(categories);
+        }
+        
+        // Render categories
+        function renderCategories(categories) {
+            const tableBody = document.getElementById('categoriesTable');
+            
+            if (categories.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <i class="fas fa-tags"></i>
+                            <p>No categories found</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            let html = '';
+            categories.forEach(category => {
+                const statusClass = category.status === 'active' ? 'status-active' : 'status-inactive';
+                
+                html += `
+                    <tr>
+                        <td>${category.id}</td>
+                        <td>${category.name}</td>
+                        <td>${category.slug}</td>
+                        <td>${category.products}</td>
+                        <td><span class="status-badge ${statusClass}">${category.status}</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-icon btn-edit" onclick="editCategory(${category.id})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-icon btn-delete" onclick="deleteCategoryPrompt(${category.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableBody.innerHTML = html;
+        }
+        
+        // Load analytics
+        function loadAnalytics() {
+            if (!revenueChart) {
+                initRevenueChart();
+            }
+            if (!userGrowthChart) {
+                initUserGrowthChart();
+            }
+            loadTopProducts();
+        }
+        
+        // Load settings
+        function loadSettings() {
+            // Load settings from localStorage or Firebase
+            const settings = JSON.parse(localStorage.getItem('storeSettings') || '{}');
+            
+            document.getElementById('storeName').value = settings.storeName || 'New Journey Shop';
+            document.getElementById('storeEmail').value = settings.storeEmail || 'contact@newjourneyshop.com';
+            document.getElementById('storePhone').value = settings.storePhone || '+1 234 567 8900';
+            document.getElementById('storeAddress').value = settings.storeAddress || '123 Shopping Street, City, Country';
+            document.getElementById('storeDescription').value = settings.storeDescription || 'Your favorite online shopping destination for quality products at great prices.';
+            document.getElementById('shippingCost').value = settings.shippingCost || '5.99';
+            document.getElementById('adminNotifyEmail').value = settings.adminNotifyEmail || 'admin@newjourneyshop.com';
+        }
+        
+        // Initialize charts
+        function initCharts() {
+            initSalesChart();
+            initCategoryChart();
+        }
+        
+        // Initialize sales chart
+        function initSalesChart() {
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            salesChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Sales ($)',
+                        data: [1200, 1900, 1500, 2500, 2200, 3000, 2800],
+                        borderColor: '#f57224',
+                        backgroundColor: 'rgba(245, 114, 36, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Initialize category chart
+        function initCategoryChart() {
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            categoryChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Electronics', 'Fashion', 'Health & Beauty', 'Sex Toy', 'Others'],
+                    datasets: [{
+                        data: [30, 25, 20, 15, 10],
+                        backgroundColor: [
+                            '#3b82f6',
+                            '#10b981',
+                            '#f59e0b',
+                            '#8b5cf6',
+                            '#ef4444'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Initialize revenue chart
+        function initRevenueChart() {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            revenueChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'Revenue ($)',
+                        data: [2500, 3200, 2800, 3500, 4200, 3800, 4500, 5200, 4800, 5500, 6000, 6500],
+                        backgroundColor: 'rgba(245, 114, 36, 0.7)',
+                        borderColor: '#f57224',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Initialize user growth chart
+        function initUserGrowthChart() {
+            const ctx = document.getElementById('userGrowthChart').getContext('2d');
+            userGrowthChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'New Users',
+                        data: [50, 65, 70, 80, 90, 85, 100, 110, 105, 120, 130, 140],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Load top products
+        function loadTopProducts() {
+            const tableBody = document.getElementById('topProductsTable');
+            const topProducts = [
+                { product: 'Wireless Bluetooth Headphones', category: 'Electronics', sold: 156, revenue: 12478.44, rating: 4.5 },
+                { product: 'Smart Fitness Watch', category: 'Electronics', sold: 89, revenue: 13349.11, rating: 4.3 },
+                { product: 'Organic Face Cream', category: 'Health & Beauty', sold: 124, revenue: 3718.76, rating: 4.7 },
+                { product: "Men's Casual Shirt", category: 'Fashion', sold: 78, revenue: 2729.22, rating: 4.2 },
+                { product: 'Premium Massage Oil', category: 'Sex Toy', sold: 56, revenue: 1399.44, rating: 4.6 }
+            ];
+            
+            let html = '';
+            topProducts.forEach(item => {
+                html += `
+                    <tr>
+                        <td>${item.product}</td>
+                        <td>${item.category}</td>
+                        <td>${item.sold}</td>
+                        <td>$${item.revenue.toFixed(2)}</td>
+                        <td>${item.rating}/5</td>
+                    </tr>
+                `;
+            });
+            
+            tableBody.innerHTML = html;
+        }
+        
+        // Load notifications
+        function loadNotifications() {
+            const notifications = [
+                {
+                    id: 1,
+                    type: 'order',
+                    title: 'New Order Received',
+                    message: 'Order #ABC123 from John Doe',
+                    time: '10 minutes ago',
+                    unread: true
+                },
+                {
+                    id: 2,
+                    type: 'user',
+                    title: 'New User Registered',
+                    message: 'Jane Smith registered an account',
+                    time: '2 hours ago',
+                    unread: true
+                },
+                {
+                    id: 3,
+                    type: 'order',
+                    title: 'Order Shipped',
+                    message: 'Order #XYZ789 has been shipped',
+                    time: '1 day ago',
+                    unread: false
+                },
+                {
+                    id: 4,
+                    type: 'system',
+                    title: 'System Update',
+                    message: 'Admin panel updated to v1.2.0',
+                    time: '2 days ago',
+                    unread: false
+                }
+            ];
+            
+            currentState.notifications = notifications;
+            renderNotifications(notifications);
+            
+            // Update notification count
+            const unreadCount = notifications.filter(n => n.unread).length;
+            document.querySelector('.notification-count').textContent = unreadCount;
+        }
+        
+        // Render notifications
+        function renderNotifications(notifications) {
+            const container = document.getElementById('notificationList');
+            
+            if (notifications.length === 0) {
+                container.innerHTML = '<div class="notification-item"><p>No notifications</p></div>';
+                return;
+            }
+            
+            let html = '';
+            notifications.forEach(notification => {
+                const unreadClass = notification.unread ? 'unread' : '';
+                
+                html += `
+                    <div class="notification-item ${unreadClass}" onclick="viewNotification(${notification.id})">
+                        <div class="notification-icon ${notification.type}">
+                            <i class="fas fa-${notification.type === 'order' ? 'shopping-cart' : notification.type === 'user' ? 'user' : 'cog'}"></i>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-title">${notification.title}</div>
+                            <div class="notification-message">${notification.message}</div>
+                            <div class="notification-time">${notification.time}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        // Mark all notifications as read
+        function markAllAsRead() {
+            currentState.notifications.forEach(notification => {
+                notification.unread = false;
+            });
+            renderNotifications(currentState.notifications);
+            document.querySelector('.notification-count').textContent = '0';
+        }
+        
+        // View notification
+        function viewNotification(id) {
+            const notification = currentState.notifications.find(n => n.id === id);
+            if (notification) {
+                notification.unread = false;
+                renderNotifications(currentState.notifications);
+                
+                // Update notification count
+                const unreadCount = currentState.notifications.filter(n => n.unread).length;
+                document.querySelector('.notification-count').textContent = unreadCount;
+                
+                // Show notification content
+                alert(`Notification: ${notification.title}\n\n${notification.message}`);
+            }
+        }
+        
+        // Show add product modal
+        function showAddProductModal() {
+            document.getElementById('addProductModal').classList.add('active');
+            document.getElementById('addProductForm').reset();
+        }
+        
+        // Save product
+        function saveProduct() {
+            const form = document.getElementById('addProductForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            // Show loading
+            const saveBtn = document.querySelector('#addProductModal .btn-primary');
+            const saveText = document.getElementById('saveProductText');
+            const loading = document.getElementById('saveProductLoading');
+            
+            saveText.style.display = 'none';
+            loading.style.display = 'inline-block';
+            
+            // Simulate API call
+            setTimeout(() => {
+                // Create product object
+                const product = {
+                    id: Date.now(),
+                    name: document.getElementById('productName').value,
+                    sku: document.getElementById('productSKU').value || `PROD-${Date.now()}`,
+                    description: document.getElementById('productDescription').value,
+                    price: parseFloat(document.getElementById('productPrice').value),
+                    comparePrice: document.getElementById('productComparePrice').value ? parseFloat(document.getElementById('productComparePrice').value) : null,
+                    category: document.getElementById('productCategory').value,
+                    stock: parseInt(document.getElementById('productStock').value),
+                    weight: document.getElementById('productWeight').value ? parseFloat(document.getElementById('productWeight').value) : null,
+                    dimensions: document.getElementById('productDimensions').value,
+                    images: document.getElementById('productImages').value.split('\n').filter(url => url.trim()),
+                    affiliateLink: document.getElementById('productAffiliateLink').value,
+                    tags: document.getElementById('productTags').value.split(',').map(tag => tag.trim()),
+                    featured: document.getElementById('productFeatured').checked,
+                    active: document.getElementById('productActive').checked,
+                    createdAt: new Date().toISOString()
+                };
+                
+                // In a real app, save to Firebase
+                // For now, add to local state
+                currentState.products.unshift(product);
+                
+                // Hide loading
+                saveText.style.display = 'inline';
+                loading.style.display = 'none';
+                
+                // Close modal
+                document.getElementById('addProductModal').classList.remove('active');
+                
+                // Show success message
+                showAlert('Product added successfully!', 'success');
+                
+                // Refresh products list
+                renderProducts(currentState.products);
+                
+                // Update stats
+                document.getElementById('totalProducts').textContent = currentState.products.length;
+            }, 1500);
+        }
+        
+        // Edit product
+        function editProduct(id) {
+            const product = currentState.products.find(p => p.id === id);
+            if (!product) return;
+            
+            currentState.currentProductId = id;
+            
+            // In a real app, load the edit form
+            // For now, show an alert
+            alert(`Edit product: ${product.name}\n\nIn a real application, this would open an edit form with pre-filled data.`);
+        }
+        
+        // Delete product prompt
+        function deleteProductPrompt(id) {
+            const product = currentState.products.find(p => p.id === id);
+            if (!product) return;
+            
+            showConfirmation(
+                `Are you sure you want to delete "${product.name}"?`,
+                () => deleteProduct(id)
+            );
+        }
+        
+        // Delete product
+        function deleteProduct(id) {
+            currentState.products = currentState.products.filter(p => p.id !== id);
+            renderProducts(currentState.products);
+            showAlert('Product deleted successfully!', 'success');
+            
+            // Update stats
+            document.getElementById('totalProducts').textContent = currentState.products.length;
+        }
+        
+        // View product
+        function viewProduct(id) {
+            const product = currentState.products.find(p => p.id === id);
+            if (product) {
+                alert(`Product: ${product.name}\n\nDescription: ${product.description}\n\nPrice: $${product.price}\n\nStock: ${product.stock}`);
+            }
+        }
+        
+        // View order
+        function viewOrder(orderId) {
+            database.ref(`orders/${orderId}`).once('value').then(snapshot => {
+                const order = snapshot.val();
+                if (!order) {
+                    showAlert('Order not found!', 'error');
+                    return;
+                }
+                
+                let productsHtml = '';
+                if (order.products && order.products.length > 0) {
+                    productsHtml = order.products.map(product => `
+                        <div style="display: flex; align-items: center; gap: 15px; padding: 10px; background: var(--light-bg); border-radius: 5px; margin-bottom: 10px;">
+                            <img src="${product.image || 'https://via.placeholder.com/50'}" style="width: 50px; height: 50px; border-radius: 5px;">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600;">${product.name}</div>
+                                <div style="font-size: 14px; color: var(--text-color);">Quantity: ${product.quantity} × $${product.price?.toFixed(2) || '0.00'}</div>
+                            </div>
+                            <div style="font-weight: 600;">
+                                $${((product.price || 0) * (product.quantity || 1)).toFixed(2)}
+                            </div>
+                        </div>
+                    `).join('');
+                }
+                
+                const statusClass = getStatusClass(order.status || 'pending');
+                
+                const content = `
+                    <div style="margin-bottom: 25px;">
+                        <h4 style="margin-bottom: 15px; color: var(--text-dark);">Order Information</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div>
+                                <p><strong>Order ID:</strong> ${orderId.substring(0, 12)}...</p>
+                                <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
+                                <p><strong>Status:</strong> <span class="status-badge ${statusClass}">${order.status || 'pending'}</span></p>
+                            </div>
+                            <div>
+                                <p><strong>Payment Method:</strong> Credit Card</p>
+                                <p><strong>Shipping Method:</strong> Standard</p>
+                                <p><strong>Tracking Number:</strong> TRK-${orderId.substring(0, 8).toUpperCase()}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 25px;">
+                        <h4 style="margin-bottom: 15px; color: var(--text-dark);">Customer Information</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div>
+                                <p><strong>Name:</strong> ${order.userName || 'Guest'}</p>
+                                <p><strong>Email:</strong> ${order.userEmail || 'N/A'}</p>
+                                <p><strong>Phone:</strong> ${order.userPhone || 'N/A'}</p>
+                            </div>
+                            <div>
+                                <p><strong>Shipping Address:</strong></p>
+                                <p>${order.shippingAddress || 'N/A'}</p>
+                            </div>
+                        </div>
+                        ${order.orderNotes ? `<p style="margin-top: 10px;"><strong>Order Notes:</strong> ${order.orderNotes}</p>` : ''}
+                    </div>
+                    
+                    <div style="margin-bottom: 25px;">
+                        <h4 style="margin-bottom: 15px; color: var(--text-dark);">Order Items (${order.products?.length || 0})</h4>
+                        ${productsHtml || '<p>No items found</p>'}
+                    </div>
+                    
+                    <div style="border-top: 2px solid var(--border-color); padding-top: 15px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>Subtotal:</span>
+                            <span>$${order.total?.toFixed(2) || '0.00'}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>Shipping:</span>
+                            <span>$5.99</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span>Tax:</span>
+                            <span>$${(order.total * 0.08).toFixed(2)}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 18px; font-weight: 600; padding-top: 10px; border-top: 1px solid var(--border-color);">
+                            <span>Total Amount:</span>
+                            <span>$${(order.total + 5.99 + (order.total * 0.08)).toFixed(2)}</span>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                        <h4 style="margin-bottom: 15px; color: var(--text-dark);">Update Order Status</h4>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <select id="updateOrderStatus" class="form-control" style="flex: 1;">
+                                <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+                                <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>Processing</option>
+                                <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
+                                <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>Completed</option>
+                                <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="updateOrderStatus('${orderId}')">Update</button>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('orderDetailsContent').innerHTML = content;
+                document.getElementById('orderDetailsModal').classList.add('active');
+            });
+        }
+        
+        // Update order status prompt
+        function updateOrderStatusPrompt(orderId) {
+            currentState.currentOrderId = orderId;
+            const newStatus = prompt('Enter new status (pending, processing, shipped, completed, cancelled):');
+            if (newStatus && ['pending', 'processing', 'shipped', 'completed', 'cancelled'].includes(newStatus.toLowerCase())) {
+                updateOrderStatus(orderId, newStatus.toLowerCase());
+            }
+        }
+        
+        // Update order status
+        function updateOrderStatus(orderId, status) {
+            if (!status) {
+                status = document.getElementById('updateOrderStatus').value;
+            }
+            
+            database.ref(`orders/${orderId}/status`).set(status)
+                .then(() => {
+                    showAlert('Order status updated successfully!', 'success');
+                    loadDashboardData();
+                    loadOrders();
+                    document.getElementById('orderDetailsModal').classList.remove('active');
+                })
+                .catch(error => {
+                    console.error('Error updating order status:', error);
+                    showAlert('Failed to update order status', 'error');
+                });
+        }
+        
+        // Delete order prompt
+        function deleteOrderPrompt(orderId) {
+            showConfirmation(
+                'Are you sure you want to delete this order? This action cannot be undone.',
+                () => deleteOrder(orderId)
+            );
+        }
+        
+        // Delete order
+        function deleteOrder(orderId) {
+            database.ref(`orders/${orderId}`).remove()
+                .then(() => {
+                    showAlert('Order deleted successfully!', 'success');
+                    loadDashboardData();
+                    loadOrders();
+                })
+                .catch(error => {
+                    console.error('Error deleting order:', error);
+                    showAlert('Failed to delete order', 'error');
+                });
+        }
+        
+        // Show add user modal
+        function showAddUserModal() {
+            document.getElementById('addUserModal').classList.add('active');
+            document.getElementById('addUserForm').reset();
+        }
+        
+        // Save user
+        function saveUser() {
+            const form = document.getElementById('addUserForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            const password = document.getElementById('userPassword').value;
+            const confirmPassword = document.getElementById('userConfirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                showAlert('Passwords do not match!', 'error');
+                return;
+            }
+            
+            // Create user object
+            const user = {
+                id: Date.now(),
+                name: document.getElementById('userName').value,
+                email: document.getElementById('userEmail').value,
+                phone: document.getElementById('userPhone').value,
+                role: document.getElementById('userRole').value,
+                address: document.getElementById('userAddress').value,
+                joined: new Date().toISOString().split('T')[0],
+                orders: 0
+            };
+            
+            // In a real app, save to Firebase
+            // For now, add to local state
+            currentState.users.unshift(user);
+            
+            // Close modal
+            document.getElementById('addUserModal').classList.remove('active');
+            
+            // Show success message
+            showAlert('User added successfully!', 'success');
+            
+            // Refresh users list
+            renderUsers(currentState.users);
+        }
+        
+        // Edit user
+        function editUser(id) {
+            const user = currentState.users.find(u => u.id === id);
+            if (user) {
+                alert(`Edit user: ${user.name}\n\nRole: ${user.role}\n\nIn a real application, this would open an edit form.`);
+            }
+        }
+        
+        // View user
+        function viewUser(id) {
+            const user = currentState.users.find(u => u.id === id);
+            if (user) {
+                alert(`User: ${user.name}\n\nEmail: ${user.email}\n\nRole: ${user.role}\n\nOrders: ${user.orders}\n\nJoined: ${user.joined}`);
+            }
+        }
+        
+        // Delete user prompt
+        function deleteUserPrompt(id) {
+            const user = currentState.users.find(u => u.id === id);
+            if (!user) return;
+            
+            showConfirmation(
+                `Are you sure you want to delete user "${user.name}"?`,
+                () => deleteUser(id)
+            );
+        }
+        
+        // Delete user
+        function deleteUser(id) {
+            currentState.users = currentState.users.filter(u => u.id !== id);
+            renderUsers(currentState.users);
+            showAlert('User deleted successfully!', 'success');
+        }
+        
+        // Show add category modal
+        function showAddCategoryModal() {
+            document.getElementById('addCategoryModal').classList.add('active');
+            document.getElementById('addCategoryForm').reset();
+        }
+        
+        // Save category
+        function saveCategory() {
+            const form = document.getElementById('addCategoryForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            // Create category object
+            const category = {
+                id: Date.now(),
+                name: document.getElementById('categoryName').value,
+                slug: document.getElementById('categorySlug').value,
+                description: document.getElementById('categoryDescription').value,
+                parent: document.getElementById('categoryParent').value || null,
+                image: document.getElementById('categoryImage').value || null,
+                active: document.getElementById('categoryActive').checked,
+                products: 0
+            };
+            
+            // In a real app, save to Firebase
+            // For now, add to local state
+            currentState.categories.unshift(category);
+            
+            // Close modal
+            document.getElementById('addCategoryModal').classList.remove('active');
+            
+            // Show success message
+            showAlert('Category added successfully!', 'success');
+            
+            // Refresh categories list
+            renderCategories(currentState.categories);
+        }
+        
+        // Edit category
+        function editCategory(id) {
+            const category = currentState.categories.find(c => c.id === id);
+            if (category) {
+                alert(`Edit category: ${category.name}\n\nSlug: ${category.slug}\n\nIn a real application, this would open an edit form.`);
+            }
+        }
+        
+        // Delete category prompt
+        function deleteCategoryPrompt(id) {
+            const category = currentState.categories.find(c => c.id === id);
+            if (!category) return;
+            
+            showConfirmation(
+                `Are you sure you want to delete category "${category.name}"?`,
+                () => deleteCategory(id)
+            );
+        }
+        
+        // Delete category
+        function deleteCategory(id) {
+            currentState.categories = currentState.categories.filter(c => c.id !== id);
+            renderCategories(currentState.categories);
+            showAlert('Category deleted successfully!', 'success');
+        }
+        
+        // Save settings
+        function saveSettings() {
+            const settings = {
+                storeName: document.getElementById('storeName').value,
+                storeEmail: document.getElementById('storeEmail').value,
+                storePhone: document.getElementById('storePhone').value,
+                storeAddress: document.getElementById('storeAddress').value,
+                storeDescription: document.getElementById('storeDescription').value,
+                shippingCost: document.getElementById('shippingCost').value,
+                adminNotifyEmail: document.getElementById('adminNotifyEmail').value
+            };
+            
+            // Save to localStorage (in real app, save to Firebase)
+            localStorage.setItem('storeSettings', JSON.stringify(settings));
+            showAlert('Settings saved successfully!', 'success');
+        }
+        
+        // Export orders
+        function exportOrders() {
+            showAlert('Exporting orders to CSV... (In a real application, this would generate a CSV file)', 'info');
+        }
+        
+        // Generate report
+        function generateReport() {
+            showAlert('Generating sales report... (In a real application, this would create a PDF report)', 'info');
+        }
+        
+        // Update sales chart
+        function updateSalesChart() {
+            const period = document.getElementById('salesPeriod').value;
+            showAlert(`Loading sales data for ${period}...`, 'info');
+        }
+        
+        // Update revenue chart
+        function updateRevenueChart() {
+            const year = document.getElementById('analyticsYear').value;
+            showAlert(`Loading revenue data for ${year}...`, 'info');
+        }
+        
+        // Refresh category chart
+        function refreshCategoryChart() {
+            showAlert('Refreshing category data...', 'info');
+        }
+        
+        // Refresh user growth chart
+        function refreshUserGrowthChart() {
+            showAlert('Refreshing user growth data...', 'info');
+        }
+        
+        // Show confirmation dialog
+        function showConfirmation(message, confirmCallback) {
+            document.getElementById('confirmationMessage').textContent = message;
+            const confirmBtn = document.getElementById('confirmActionBtn');
+            
+            // Remove previous event listeners
+            const newConfirmBtn = confirmBtn.cloneNode(true);
+            confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+            
+            // Add new event listener
+            newConfirmBtn.addEventListener('click', function() {
+                confirmCallback();
+                document.getElementById('confirmationModal').classList.remove('active');
+            });
+            
+            document.getElementById('confirmationModal').classList.add('active');
+        }
+        
+        // Show alert
+        function showAlert(message, type = 'info') {
+            // Create alert element
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.innerHTML = `
+                <div style="position: fixed; top: 20px; right: 20px; background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'}; color: white; padding: 15px 20px; border-radius: 5px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 3000; display: flex; align-items: center; gap: 10px; max-width: 400px;">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(alert);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+        }
+        
+        // Get status class
+        function getStatusClass(status) {
+            switch(status) {
+                case 'pending': return 'status-pending';
+                case 'processing': return 'status-processing';
+                case 'shipped': return 'status-shipped';
+                case 'completed': return 'status-completed';
+                case 'cancelled': return 'status-cancelled';
+                default: return 'status-pending';
+            }
+        }
+    </script>
 </body>
 </html>
